@@ -114,28 +114,10 @@
 <script src="Queues/data-suggestions.js"></script>
 <script src="Queues/data-sync.js"></script>
 <script src="Queues/data-charter.js"></script>
+<script src="Queues/data-agents.js"></script>
 <script>
-  // ---- Agents (goal / schedule / status / success metric) ----
-  const AGENTS = [
-    {name:"Scout — Morning shortlist", role:"🔎 Executive headhunter / talent scout", time:"Daily · 9:00 AM (skips if you already started)", status:"active",
-     goal:"Find genuinely-open, well-fit senior-ops KSA roles and present each with job summary, company summary & fit score. On Harbi's picks: build tailored CVs, open each in a tab, pre-fill. Never applies.",
-     metric:"Win = 4–6 fresh, de-duped, open, fitting roles with fit scores; zero expired/knockout roles slipping through; picks convert to applications."},
-    {name:"Polish — Profile benchmark", role:"✍️ CV & personal-brand strategist", time:"Daily · 9:45 AM", status:"active",
-     goal:"Study strong peer profiles + live JDs and propose honest profile/CV improvements (patterns & keywords, never copied). Proposals only.",
-     metric:"Win = new, honest, actionable proposals each run (no repeats). Never edits the Master Profile without Harbi's 'apply profile updates'."},
-    {name:"Radar — Inbox & messages", role:"📥 Executive assistant (read-only)", time:"Daily · 10:30 AM", status:"active",
-     goal:"Read-only scan of Outlook + LinkedIn for recruiter replies, interview invites, and status updates; write a digest and flag what needs Harbi.",
-     metric:"Win = catches every job-relevant reply/invite with low noise. Never sends, replies, deletes, or clicks links."},
-    {name:"Coach — Agent health review", role:"🩺 Performance manager for the agent team", time:"Daily · 11:15 AM", status:"active",
-     goal:"Check each agent hit its goal, track the funnel day-over-day, and REFRESH dashboard data. Auto-applies only reversible fixes; anything bigger (profile, exclusions, agent prompts, live sites) becomes a recommendation that waits for your 'accept coach #N'.",
-     metric:"Win = every agent healthy & improving; funnel moving; zero silent changes — big items are proposed, then applied only after Harbi accepts."},
-    {name:"Sync — Profile presence", role:"🔗 Digital-presence manager for job-site profiles", time:"Weekly · Sat 11:30 AM", status:"active",
-     goal:"Keep Harbi's live job-site profiles (LinkedIn, Bayt, GulfTalent, Naukrigulf, Indeed) in step with the Master Profile version, and prep new boards. Prepares packs & fills fields in attended sessions — never creates accounts, logs in, or submits.",
-     metric:"Win = every profile matches the current Master Profile version; new boards set up fast; account creation & login always left to Harbi."},
-    {name:"Chief of Staff", role:"🧭 Campaign lead / orchestrator (this is me)", time:"Always on", status:"active",
-     goal:"Run the whole campaign: coordinate Scout, Polish, Radar & Coach; bring Harbi scored choices; build & pre-fill applications (Harbi submits); log & track everything; and keep improving the system so more of the loop runs automatically over time.",
-     metric:"Win = a steady flow of strong applications → replies → interviews, Harbi always in control, and the agent team getting better every day."},
-  ];
+  // ---- Agents (data-driven from Queues/data-agents.js — nothing hardcoded here) ----
+  const AGENTS = (window.Q_AGENTS && Array.isArray(window.Q_AGENTS.agents)) ? window.Q_AGENTS.agents : [];
 
   function esc(s){return (s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
 
@@ -144,7 +126,7 @@
   const SHORT = { "Scout":"headhunter", "Polish":"CV strategist", "Radar":"inbox EA", "Coach":"performance manager", "Sync":"profile presence", "Chief of Staff":"coordinator" };
   const teamLines = AGENTS.map(a=>{
     const nm = a.name.split("—")[0].trim();
-    const sh = SHORT[nm] || (a.role||"").replace(/^[^A-Za-z]+/,"");
+    const sh = a.short || SHORT[nm] || (a.role||"").replace(/^[^A-Za-z]+/,"");
     const off = a.status!=="active";
     return `<div style="margin:5px 0${off?';opacity:.55':''}"><b>${esc(nm)}</b> — ${esc(sh)}${off?' (off)':''}</div>`;
   }).join("");
@@ -484,3 +466,4 @@
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
