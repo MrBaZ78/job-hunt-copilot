@@ -9,6 +9,14 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [1.1.0] — 2026-07-06
+### Fixed
+- **CV intake** — setup now asks the user to attach the CV directly via **+ / paperclip** and verifies it's readable before continuing (fixes the empty-CV-field-on-submit bug where a form uploader dropped the file).
+- **Board selection is strictly country-based** — no longer defaults to GCC boards (Bayt / GulfTalent / Naukrigulf) for users outside the GCC/MENA/India; unlisted countries fall back to LinkedIn + Indeed + national board + company ATS.
+- **Run guard / first run** — Scout skips only on a REAL completed sweep for today (not a seed/initialization state), and a manual trigger always runs — so the first scheduled run works and the shortlist can be run manually any time.
+### Changed
+- **Dashboard is fully data-driven** — the agent roster (Team card + Agents section) now comes from `data-agents.js` written by setup, instead of being hardcoded in the HTML.
+
 ## [1.0.1] — 2026-07-06
 ### Added
 - `LICENSE` — personal / non-commercial use (free for personal job search; commercial rights reserved to the author).
