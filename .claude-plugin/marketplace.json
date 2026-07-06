@@ -1,0 +1,12 @@
+{
+  "name": "job-hunt-copilot-marketplace",
+  "owner": { "name": "MrBaZ78" },
+  "metadata": { "description": "Marketplace hosting the Job-Hunt Copilot plugin for Claude Cowork / Claude Code." },
+  "plugins": [
+    {
+      "name": "job-hunt-copilot",
+      "source": "./plugins/job-hunt-copilot",
+      "description": "Self-driving job-search assistant: interviews you, builds your Master Career Profile from your CV, picks the right job boards for your country, and schedules a 5-agent team (Scout/Polish/Radar/Coach/Sync) with a live dashboard. Any profession, any country. Never submits, sends, spends, or logs in for you."
+    }
+  ]
+}
