@@ -1,0 +1,6 @@
+# never commit personal data or secrets
+*.env
+*.key
+secrets*
+CVs/
+uploads/
