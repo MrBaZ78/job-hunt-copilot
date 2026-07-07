@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Job Search — Progress Dashboard</title>
+<title>Job Search — Dashboard</title>
 <style>
   :root{
     --navy:#1f2a44; --grey:#5b6472; --line:#e6e8ee; --bg:#f5f6f8; --card:#ffffff;
@@ -11,459 +11,297 @@
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--navy);line-height:1.45}
-  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
-  h1{font-size:26px;margin:0 0 2px}
-  h2{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--grey);margin:34px 0 12px;font-weight:700}
-  .sub{color:var(--grey);font-size:14px;margin:0 0 4px}
-  .cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px}
-  .card3{background:linear-gradient(160deg,#1f2a44,#33415e);color:#fff;border-radius:14px;padding:18px 20px}
-  .card3 .c3h{font-weight:800;font-size:15px;margin-bottom:8px;color:#ffd67a}
-  .card3 .c3b{font-size:13px;opacity:.92;line-height:1.5}
-  .card3 .c3b b{color:#ffd67a}
-  /* funnel */
-  .funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:6px}
-  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .stat .n{font-size:34px;font-weight:800;line-height:1}
-  .stat .l{color:var(--grey);font-size:13px;margin-top:6px}
-  .stat .bar{height:6px;border-radius:4px;background:var(--chip);margin-top:12px;overflow:hidden}
-  .stat .bar>i{display:block;height:100%;background:var(--blue)}
-  /* agents */
-  .agents{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-  .agent{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative}
-  .agent h3{margin:0 0 2px;font-size:16px}
-  .agent .time{color:var(--blue);font-size:12.5px;font-weight:600}
-  .agent .goaltxt{font-size:13.5px;color:#333;margin:10px 0 12px}
-  .pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}
-  .p-active{background:#e5f5ec;color:var(--green)}
-  .p-off{background:#f0f0f0;color:#888}
-  .metric{font-size:12px;color:var(--grey);border-top:1px dashed var(--line);padding-top:9px;margin-top:4px}
-  /* table */
-  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:13.5px}
-  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-  th{background:#fafbfc;color:var(--grey);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 20px 60px}
+  h1{font-size:24px;margin:0 0 2px}
+  h2{font-size:14px;letter-spacing:.05em;text-transform:uppercase;color:var(--grey);margin:26px 0 12px;font-weight:700}
+  .sub{color:var(--grey);font-size:13.5px;margin:0 0 14px}
+  /* tabs */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:20px}
+  .tab{background:none;border:none;font:inherit;cursor:pointer;padding:10px 14px;font-size:14px;font-weight:700;color:var(--grey);border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tab:hover{color:var(--navy)}
+  .tab.active{color:var(--navy);border-bottom-color:var(--blue)}
+  .panel{display:none}
+  .panel.show{display:block;animation:fade .2s ease}
+  @keyframes fade{from{opacity:.4}to{opacity:1}}
+  .lead{font-size:15px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:12px;padding:14px 16px;margin-bottom:6px}
+  /* cards / stats */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .stat .n{font-size:30px;font-weight:800;line-height:1}
+  .stat .l{color:var(--grey);font-size:12.5px;margin-top:6px}
+  .bar{height:6px;border-radius:4px;background:var(--chip);margin-top:10px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--blue)}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
+  .p-active{background:#e5f5ec;color:var(--green)} .p-off{background:#f0f0f0;color:#888}
+  .todoitem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+  .todoitem .rep{font-size:12.5px;margin-top:7px} .todoitem .rep b{color:var(--blue)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:13px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#fafbfc;color:var(--grey);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
   tr:last-child td{border-bottom:none}
-  .st{font-size:11.5px;font-weight:700;color:var(--green);white-space:nowrap}
-  .muted{color:var(--grey)}
-  a{color:var(--blue);text-decoration:none}
-  a:hover{text-decoration:underline}
+  .st{font-size:11px;font-weight:700;color:var(--green);white-space:nowrap}
+  .muted{color:var(--grey)} a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
   .note{font-size:12.5px;color:var(--grey);margin-top:10px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:2px 14px;margin-top:12px}
+  details>summary{cursor:pointer;font-weight:700;font-size:13.5px;padding:12px 0;list-style:none}
+  details>summary::-webkit-details-marker{display:none}
+  details>summary::before{content:"▸ ";color:var(--blue)}
+  details[open]>summary::before{content:"▾ "}
+  details .body{padding:4px 0 14px}
+  .agentcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
   .foot{margin-top:30px;font-size:12px;color:var(--grey);text-align:center}
-  @media(max-width:720px){.funnel{grid-template-columns:repeat(2,1fr)}.agents{grid-template-columns:1fr}.cards3{grid-template-columns:1fr}}
+  @media(max-width:720px){.funnel{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Job Search — Progress Dashboard</h1>
+  <h1>Job Search — Dashboard</h1>
   <p class="sub" id="asof">Loading…</p>
 
-  <div class="cards3" id="charter"></div>
-
-  <h2>The Funnel — where we are now</h2>
-  <div class="funnel" id="funnel"></div>
-  <p class="note" id="funnelnote"></p>
-
-  <h2>★ North Star Metric</h2>
-  <div id="northstar"></div>
-
-  <h2>Agent Scores — vs their target</h2>
-  <div id="agentscores"></div>
-
-  <h2>Statistics</h2>
-  <div id="statcards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px">
-    <div class="stat"><div class="l" style="margin-bottom:10px;font-weight:700;color:var(--navy)">Applications by industry</div><div id="industry"></div></div>
-    <div class="stat"><div class="l" style="margin-bottom:10px;font-weight:700;color:var(--navy)">Sources searched</div><div id="sources"></div></div>
-    <div class="stat"><div class="l" style="margin-bottom:10px;font-weight:700;color:var(--navy)">Companies</div><div id="companies"></div></div>
+  <div class="tabs">
+    <button class="tab active" data-tab="today">📌 Today</button>
+    <button class="tab" data-tab="progress">📈 Progress</button>
+    <button class="tab" data-tab="profile">📝 My Profile</button>
+    <button class="tab" data-tab="team">🤝 The Team</button>
   </div>
-  <p class="note" id="statnote"></p>
 
-  <h2>Profile Suggestions — awaiting your review</h2>
-  <div id="suggestions"></div>
+  <!-- TODAY -->
+  <section class="panel show" id="tab-today">
+    <div id="headline"></div>
+    <h2>✅ Your To-Do — do these when you're ready</h2>
+    <div id="todo"></div>
+  </section>
 
-  <h2>Agent Health — latest review</h2>
-  <div id="health"></div>
+  <!-- PROGRESS -->
+  <section class="panel" id="tab-progress">
+    <div id="northstar"></div>
+    <h2>Where you are</h2>
+    <div class="funnel" id="funnel"></div>
+    <p class="note" id="funnelnote"></p>
+    <h2>The numbers</h2>
+    <div class="grid" id="statcards"></div>
+    <details><summary>More detail — industries, sites, companies</summary><div class="body">
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
+        <div class="stat"><div class="l" style="font-weight:700;color:var(--navy);margin-bottom:8px">Applications by industry</div><div id="industry"></div></div>
+        <div class="stat"><div class="l" style="font-weight:700;color:var(--navy);margin-bottom:8px">Sites searched</div><div id="sources"></div></div>
+        <div class="stat"><div class="l" style="font-weight:700;color:var(--navy);margin-bottom:8px">Companies applied to</div><div id="companies"></div></div>
+      </div>
+    </div></details>
+    <h2>Your applications</h2>
+    <div id="apps"></div>
+  </section>
 
-  <h2>Boards Searched — latest run</h2>
-  <div id="searchlog"></div>
+  <!-- MY PROFILE -->
+  <section class="panel" id="tab-profile">
+    <h2>CV suggestions to review</h2>
+    <div id="suggestions"></div>
+    <h2>Your job-site profiles</h2>
+    <div id="sync"></div>
+  </section>
 
-  <h2>Today's Shortlist — latest run</h2>
-  <div id="shortlist"></div>
-
-  <h2>Profile Sync — live sites</h2>
-  <div id="sync"></div>
-
-  <h2>How the team connects — closed loop</h2>
-  <div id="loop"></div>
-
-  <h2>The Agents — goal &amp; status</h2>
-  <div class="agents" id="agents"></div>
-  <p class="note">Retired: the old build-cv / discovery / orchestrator / site-fill / email-watch / decisions-guardian agents — all disabled; delete from the Scheduled panel when convenient.</p>
-
-  <h2>Applications — live from tracker</h2>
-  <div id="apps"></div>
+  <!-- THE TEAM -->
+  <section class="panel" id="tab-team">
+    <h2>Your team</h2>
+    <div class="grid" id="agents" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))"></div>
+    <div id="recs"></div>
+    <details><summary>How the team connects</summary><div class="body" id="loop"></div></details>
+    <details><summary>Search coverage — latest run</summary><div class="body" id="searchlog"></div></details>
+    <details><summary>Goal, direction &amp; guardrails</summary><div class="body" id="charter"></div></details>
+  </section>
 
   <div class="foot" id="foot"></div>
 </div>
 
-<!-- live data -->
 <script src="Queues/data-applied.js"></script>
 <script src="Queues/data-shortlist.js"></script>
+<script src="Queues/data-searchlog.js"></script>
 <script src="Queues/data-health.js"></script>
 <script src="Queues/data-stats.js"></script>
-<script src="Queues/data-searchlog.js"></script>
 <script src="Queues/data-suggestions.js"></script>
 <script src="Queues/data-sync.js"></script>
 <script src="Queues/data-charter.js"></script>
 <script src="Queues/data-agents.js"></script>
+<script src="Queues/data-todo.js"></script>
 <script>
-  // ---- Agents (data-driven from Queues/data-agents.js — nothing hardcoded here) ----
-  const AGENTS = (window.Q_AGENTS && Array.isArray(window.Q_AGENTS.agents)) ? window.Q_AGENTS.agents : [];
-
   function esc(s){return (s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
-
-  // ---- Charter cards (Goal / Team / Direction / Guardrails) — Team auto-built from the live agent roster ----
-  const CH = window.Q_CHARTER || {};
-  const SHORT = { "Scout":"headhunter", "Polish":"CV strategist", "Radar":"inbox EA", "Coach":"performance manager", "Sync":"profile presence", "Chief of Staff":"coordinator" };
-  const teamLines = AGENTS.map(a=>{
-    const nm = a.name.split("—")[0].trim();
-    const sh = a.short || SHORT[nm] || (a.role||"").replace(/^[^A-Za-z]+/,"");
-    const off = a.status!=="active";
-    return `<div style="margin:5px 0${off?';opacity:.55':''}"><b>${esc(nm)}</b> — ${esc(sh)}${off?' (off)':''}</div>`;
-  }).join("");
-  const conf = CH.confirmed ? `<div class="note" style="margin-top:10px;opacity:.75;color:#cfd6e6">Confirmed ${esc(CH.confirmed)}</div>` : "";
-  const charterEl = document.getElementById("charter");
-  if(charterEl) charterEl.innerHTML = `
-    <div class="card3"><div class="c3h">🎯 Goal</div><div class="c3b">${esc(CH.goal||"")}</div>${conf}</div>
-    <div class="card3"><div class="c3h">👥 The Team</div><div class="c3b">${teamLines}</div>${conf}</div>
-    <div class="card3"><div class="c3h">🚀 Direction</div><div class="c3b">${esc(CH.direction||"")}</div>${conf}</div>
-    <div class="card3"><div class="c3h">🛡️ Guardrails</div><div class="c3b">${esc(CH.guardrails||"")}</div>${conf}</div>`;
-
-  // ---- Applications ----
-  const A = (window.Q_APPLIED && Array.isArray(window.Q_APPLIED.items)) ? window.Q_APPLIED.items : [];
-  const total = A.length;
-  const rx = t => A.filter(i=>new RegExp(t,"i").test(i.status||"")).length;
-  const replies    = A.filter(i=>/(repl|response|shortlist|assessment|screen|interview|offer|next step)/i.test(i.status||"")).length;
-  const interviews = rx("interview");
-  const offers     = rx("offer");
-
   const today = new Date();
+
+  // tabs
+  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+    document.getElementById('tab-'+b.dataset.tab).classList.add('show');
+  }));
+
+  // ---- data ----
+  const A  = (window.Q_APPLIED && Array.isArray(Q_APPLIED.items)) ? Q_APPLIED.items : [];
+  const ST = window.Q_STATS || {};
+  const CH = window.Q_CHARTER || {};
+  const H  = window.Q_HEALTH || {};
+  const AGENTS = (window.Q_AGENTS && Array.isArray(Q_AGENTS.agents)) ? Q_AGENTS.agents : [];
+  const total = A.length;
+  const replies    = A.filter(i=>/(repl|response|shortlist|assessment|screen|interview|offer|next step)/i.test(i.status||"")).length;
+  const interviews = A.filter(i=>/interview/i.test(i.status||"")).length;
+  const offers     = A.filter(i=>/offer/i.test(i.status||"")).length;
+
   document.getElementById("asof").textContent =
     "As of " + today.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'}) +
-    (window.Q_APPLIED&&window.Q_APPLIED.updated ? " · tracker updated " + window.Q_APPLIED.updated : "");
+    (window.Q_APPLIED&&Q_APPLIED.updated ? " · updated " + Q_APPLIED.updated : "");
 
-  // funnel
-  const stages = [
-    {n:total, l:"Applications submitted", pct:100, c:"var(--blue)"},
-    {n:replies, l:"Replies / next steps", pct: total?Math.round(replies/total*100):0, c:"var(--amber)"},
-    {n:interviews, l:"Interviews", pct: total?Math.round(interviews/total*100):0, c:"var(--green)"},
-    {n:offers, l:"Offers", pct: total?Math.round(offers/total*100):0, c:"var(--green)"},
-  ];
-  document.getElementById("funnel").innerHTML = stages.map(s=>`
-    <div class="stat">
-      <div class="n">${s.n}</div>
-      <div class="l">${s.l}</div>
-      <div class="bar"><i style="width:${s.pct}%;background:${s.c}"></i></div>
-    </div>`).join("");
-  document.getElementById("funnelnote").textContent =
-    replies===0 && total>0
-      ? "All applications are freshly submitted — no replies yet. The Inbox agent will move roles into 'Replies' as recruiters respond."
-      : "";
+  // ================= TODAY =================
+  const TD = window.Q_TODO || null;
+  const nowItems   = TD ? (TD.items||[]).filter(i=>i.priority==='now') : [];
+  const laterItems = TD ? (TD.items||[]).filter(i=>i.priority!=='now') : [];
+  document.getElementById("headline").innerHTML =
+    `<div class="lead">${esc((H.overall)|| "Here's where things stand.")}<div class="note" style="margin-top:6px">${
+      (nowItems.length+laterItems.length)
+        ? `You have <b>${nowItems.length+laterItems.length}</b> thing${(nowItems.length+laterItems.length)!==1?'s':''} on your list${nowItems.length?` — <b style="color:var(--red)">${nowItems.length} need${nowItems.length!==1?'':'s'} you soon</b>`:''}. Nothing is lost if you wait.`
+        : `Nothing needs you right now. 🎉`
+    } Type <b>"what's new?"</b> in chat any time.</div></div>`;
 
-  // ---- North Star metric ----
-  const NS = (window.Q_CHARTER||{}).northStar || null;
+  const waited = d => { if(!d) return ''; const n=Math.floor((today-new Date(d))/86400000); return n>=1?` · waiting ${n} day${n>1?'s':''}`:''; };
+  const todoRow = i => `<div class="todoitem"><div style="font-size:13.5px">${esc(i.title)}</div>
+      <div class="rep"><b>👉 Reply:</b> "${esc(i.reply)}"</div>
+      <div class="note" style="margin-top:4px">from ${esc(i.who||'')}${waited(i.added)}</div></div>`;
+  document.getElementById("todo").innerHTML =
+    (!TD || !(nowItems.length+laterItems.length))
+    ? '<div class="stat"><b>You\'re all caught up 🎉</b><div class="note" style="margin-top:4px">New items appear here the moment an agent finds something.</div></div>'
+    : (nowItems.length?`<div style="font-weight:800;color:var(--red);margin:4px 0 8px">🔴 Needs you soon</div>${nowItems.map(todoRow).join("")}`:'')
+    + (laterItems.length?`<div style="font-weight:800;color:var(--green);margin:12px 0 8px">🟢 When you have time</div>${laterItems.map(todoRow).join("")}`:'');
+
+  // ================= PROGRESS =================
+  const NS = CH.northStar || null;
   if(NS){
-    const cur = interviews;
-    const tgt = NS.target||1;
-    const pct = Math.min(100, Math.round(cur/tgt*100));
+    const cur=interviews, tgt=NS.target||1, pct=Math.min(100,Math.round(cur/tgt*100));
     document.getElementById("northstar").innerHTML = `
-      <div style="background:linear-gradient(135deg,#12324f,#1f6f5c);color:#fff;border-radius:16px;padding:22px 24px">
+      <div style="background:linear-gradient(135deg,#12324f,#1f6f5c);color:#fff;border-radius:16px;padding:20px 22px">
         <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
-          <div style="font-size:42px;font-weight:800;line-height:1;color:#ffd67a">${cur}</div>
-          <div>
-            <div style="font-size:19px;font-weight:800">${esc(NS.metric)}</div>
-            <div style="font-size:12.5px;opacity:.85">target ${tgt} · ${offers} offer${offers!==1?'s':''} so far · goal: ${esc(NS.ultimate)}</div>
-          </div>
+          <div style="font-size:40px;font-weight:800;line-height:1;color:#ffd67a">${cur}</div>
+          <div><div style="font-size:18px;font-weight:800">${esc(NS.metric)}</div>
+          <div style="font-size:12.5px;opacity:.85">target ${tgt} · ${offers} offer${offers!==1?'s':''} so far · goal: ${esc(NS.ultimate||'')}</div></div>
         </div>
-        <div class="bar" style="background:rgba(255,255,255,.18);margin-top:16px"><i style="width:${pct}%;background:#ffd67a"></i></div>
-        <div style="font-size:12.5px;opacity:.85;margin-top:10px">${esc(NS.why)}</div>
+        <div class="bar" style="background:rgba(255,255,255,.18);margin-top:14px"><i style="width:${pct}%;background:#ffd67a"></i></div>
+        <div style="font-size:12.5px;opacity:.85;margin-top:9px">${esc(NS.why||'')}</div>
       </div>`;
-  } else { document.getElementById("northstar").innerHTML = ''; }
+  }
+  const stages=[{n:total,l:"Applications sent",c:"var(--blue)",p:100},
+    {n:replies,l:"Replies / next steps",c:"var(--amber)",p:total?Math.round(replies/total*100):0},
+    {n:interviews,l:"Interviews",c:"var(--green)",p:total?Math.round(interviews/total*100):0},
+    {n:offers,l:"Offers",c:"var(--green)",p:total?Math.round(offers/total*100):0}];
+  document.getElementById("funnel").innerHTML = stages.map(s=>`<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div><div class="bar"><i style="width:${s.p}%;background:${s.c}"></i></div></div>`).join("");
+  document.getElementById("funnelnote").textContent = (replies===0&&total>0) ? "All applications are freshly sent — no replies yet. Replies will show here as recruiters respond." : "";
 
-  // ---- Agent scores vs target ----
-  const scored = (window.Q_HEALTH && Array.isArray(window.Q_HEALTH.agents)) ? window.Q_HEALTH.agents : [];
-  if(!scored.length){
-    document.getElementById("agentscores").innerHTML = '<p class="muted">No scores yet — Coach scores each agent daily at 9:30 AM.</p>';
-  }else{
-    document.getElementById("agentscores").innerHTML =
-      `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px">` +
-      scored.map(a=>{
-        const s = (typeof a.score==='number') ? a.score : null;
-        const col = s==null ? 'var(--grey)' : (s>=85?'var(--green)':(s>=70?'var(--amber)':'var(--red)'));
-        return `<div class="stat" style="padding:14px">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-            <b style="font-size:13.5px">${esc(a.name)}</b>
-            <span style="font-weight:800;color:${col};white-space:nowrap">${s==null?'—':s}<span class="muted" style="font-size:11px">${s==null?' pending':'/100'}</span></span>
-          </div>
-          ${a.target?`<div class="muted" style="font-size:12px;margin-top:4px">🎯 ${esc(a.target)}</div>`:''}
-          <div class="bar" style="margin-top:9px"><i style="width:${s==null?0:s}%;background:${col}"></i></div>
-        </div>`;
-      }).join("") + `</div>`;
+  const days=new Set(A.map(i=>i.applied).filter(Boolean)).size||1;
+  const uniqueCompanies=new Set(A.map(i=>(i.company||"").replace(/\s*\(.*$/,"").trim()).filter(Boolean)).size;
+  const projStart=ST.projectStart?new Date(ST.projectStart):null;
+  const daysRunning=projStart?Math.floor((today-projStart)/86400000)+1:null;
+  const fits=((window.Q_SHORTLIST&&Q_SHORTLIST.roles)||[]).map(r=>r.fit).filter(f=>typeof f==='number');
+  const avgFit=fits.length?Math.round(fits.reduce((a,b)=>a+b,0)/fits.length):null;
+  const stat=(n,l)=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  document.getElementById("statcards").innerHTML =
+    stat(daysRunning!=null?daysRunning:'—',"Days running") + stat(total,"Applications sent") +
+    stat((total/days).toFixed(1),"Avg per day") + stat(uniqueCompanies,"Companies") +
+    stat(avgFit!=null?avgFit:'—',"Avg fit score") + stat(ST.rolesSurfaced!=null?ST.rolesSurfaced:'—',"Roles seen (approx)");
+
+  // Generic: group applications by a `sector` (or `industry`) field if the agents set one; otherwise "Other".
+  function classify(i){return (i.sector||i.industry||"Other").toString().trim()||"Other";}
+  const indT={};A.forEach(i=>{const k=classify(i);indT[k]=(indT[k]||0)+1});
+  const indMax=Math.max(1,...Object.values(indT));
+  document.getElementById("industry").innerHTML=Object.entries(indT).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="margin:6px 0"><div style="display:flex;justify-content:space-between;font-size:12.5px"><span>${esc(k)}</span><b>${v}</b></div><div class="bar"><i style="width:${Math.round(v/indMax*100)}%"></i></div></div>`).join("")||'<span class="muted">—</span>';
+  document.getElementById("sources").innerHTML=((ST.sources)||[]).map(s=>`<span class="pill" style="background:var(--chip);color:var(--navy);margin:3px 4px 3px 0">${esc(s)}</span>`).join("")||'<span class="muted">—</span>';
+  const compT={};A.forEach(i=>{const c=(i.company||"").replace(/\s*\(.*$/,"").trim();if(c)compT[c]=(compT[c]||0)+1});
+  document.getElementById("companies").innerHTML=Object.entries(compT).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;margin:5px 0"><span>${esc(k)}</span>${v>1?`<b>${v}</b>`:''}</div>`).join("")||'<span class="muted">—</span>';
+
+  if(!total){document.getElementById("apps").innerHTML='<p class="muted">No applications logged yet.</p>';}
+  else{document.getElementById("apps").innerHTML=`<table><thead><tr><th>#</th><th>Company / Role</th><th>Location</th><th>Applied</th><th>Status</th></tr></thead><tbody>${
+    A.map((i,x)=>`<tr><td>${x+1}</td><td><b>${esc(i.company)}</b><br><span class="muted">${esc(i.role)}</span></td><td>${esc(i.location||"")}</td><td>${esc(i.applied||"")}</td><td>${/Submitted/i.test(i.status||'')?`<a href="${esc(i.link||'#')}" target="_blank">✔ Submitted</a>`:`<span class="st">${esc(i.status||'')}</span>`}</td></tr>`).join("")
+  }</tbody></table>`;}
+
+  // ================= MY PROFILE =================
+  const SG=window.Q_SUGGESTIONS||null;
+  if(!SG||!(SG.items||[]).length){document.getElementById("suggestions").innerHTML='<p class="muted">No suggestions right now — Polish proposes profile improvements here for your review.</p>';}
+  else{
+    const pend=SG.items.filter(i=>(i.status||'pending')==='pending');
+    const toApply=pend.filter(i=>i.type!=='question'), qs=pend.filter(i=>i.type==='question');
+    const pr=p=>`<span class="pill" style="background:${p==='High'?'#fde8e8':p==='Medium'?'#fff4e5':'#eef1f6'};color:${p==='High'?'#c0392b':p==='Medium'?'#8a5a00':'var(--navy)'};font-size:10.5px">${esc(p||'')}</span>`;
+    const row=i=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)"><span style="font-weight:800;color:var(--grey);min-width:26px">#${i.id}</span><span style="flex:1;font-size:13px">${esc(i.title)}</span>${pr(i.priority)}</div>`;
+    document.getElementById("suggestions").innerHTML = !pend.length
+      ? '<div class="stat"><b>Nothing waiting 🎉</b><div class="note" style="margin-top:4px">Your profile is up to date with everything you\'ve accepted.</div></div>'
+      : `<div class="lead" style="border-left-color:var(--green)"><b>${pend.length}</b> waiting — <b>${toApply.length}</b> ready to add, <b>${qs.length}</b> need your answer. Reply <b>"accept all"</b> to add the ready ones, or <b>"accept #"</b> / <b>"reject #"</b> for one.</div>
+         <div class="grid" style="grid-template-columns:1fr 1fr">
+           <div class="stat"><div class="l" style="font-weight:700;color:var(--navy);margin-bottom:6px">Ready to add</div>${toApply.map(row).join("")||'<span class="muted">—</span>'}</div>
+           <div class="stat"><div class="l" style="font-weight:700;color:var(--navy);margin-bottom:6px">Need your answer</div>${qs.map(row).join("")||'<span class="muted">—</span>'}</div>
+         </div>`;
+  }
+  const SY=window.Q_SYNC||null;
+  if(!SY||!(SY.sites||[]).length){document.getElementById("sync").innerHTML='<p class="muted">No profile status yet — Sync checks your job-site profiles weekly.</p>';}
+  else{
+    document.getElementById("sync").innerHTML =
+      `<p class="note" style="margin-top:0">Your CV is at version <b>${SY.masterVersion!=null?SY.masterVersion:'—'}</b>. Sync keeps each site matching it. To update the ones behind: log in and say <b>"go"</b>.</p>`+
+      `<div class="stat">${SY.sites.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)"><b style="font-size:13px">${esc(s.name)}</b>${/in sync/i.test(s.status||'')?'<span class="pill p-active">✓ up to date</span>':`<span class="muted" style="font-size:12px">${esc(s.status||'')}</span>`}</div>`).join("")}</div>`;
   }
 
-  // agents
-  document.getElementById("agents").innerHTML = AGENTS.map(a=>`
-    <div class="agent">
-      <span class="pill ${a.status==='active'?'p-active':'p-off'}" style="position:absolute;top:16px;right:16px">${a.status==='active'?'Active':'Off'}</span>
-      <h3>${esc(a.name)}</h3>
-      ${a.role?`<div class="muted" style="font-size:12px;font-style:italic;margin-bottom:2px">${esc(a.role)}</div>`:''}
-      <div class="time">${esc(a.time)}</div>
-      <div class="goaltxt">${esc(a.goal)}</div>
-      <div class="metric">${esc(a.metric)}</div>
-    </div>`).join("");
+  // ================= THE TEAM =================
+  const firstName=s=>String(s||'').split(/\s*[—–-]\s*/)[0].trim().toLowerCase();
+  const healthBy={}; (H.agents||[]).forEach(h=>{healthBy[firstName(h.name)]=h;});
+  document.getElementById("agents").innerHTML = AGENTS.map(a=>{
+    const nm=a.name.split(/\s*[—–-]\s*/)[0].trim();
+    const h=healthBy[nm.toLowerCase()]||{};
+    const s=(typeof h.score==='number')?h.score:null;
+    const col=s==null?'var(--grey)':(s>=85?'var(--green)':s>=70?'var(--amber)':'var(--red)');
+    const off=a.status && a.status!=='active';
+    return `<div class="agentcard">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+        <b style="font-size:15px">${esc(a.name)}</b>
+        <span style="font-weight:800;color:${col};white-space:nowrap">${s==null?(off?'—':''):s}${s==null?'':'<span class="muted" style="font-size:11px">/100</span>'}</span>
+      </div>
+      <div class="muted" style="font-size:12px;font-style:italic;margin-top:2px">${esc(a.role||'')}</div>
+      <div style="color:var(--blue);font-size:12px;font-weight:600;margin-top:4px">${esc(a.time||'')}</div>
+      ${h.note?`<div style="font-size:12.5px;margin-top:8px">${esc(h.note)}</div>`:''}
+      ${s!=null?`<div class="bar" style="margin-top:8px"><i style="width:${s}%;background:${col}"></i></div>`:''}
+      <details style="margin-top:8px;border:none;padding:0"><summary style="font-size:12px;padding:6px 0">what this one does</summary><div class="body" style="padding:0 0 6px"><div style="font-size:12.5px">${esc(a.goal||'')}</div>${a.metric?`<div class="note" style="margin-top:6px">${esc(a.metric)}</div>`:''}</div></details>
+    </div>`;
+  }).join("") || '<p class="muted">No agents set up yet.</p>';
 
-  // applications table
-  if(!total){
-    document.getElementById("apps").innerHTML = '<p class="muted">No applications logged yet.</p>';
-  }else{
-    const rows = A.map((i,ix)=>`
-      <tr>
-        <td>${ix+1}</td>
-        <td><b>${esc(i.company)}</b><br><span class="muted">${esc(i.role)}</span></td>
-        <td>${esc(i.location||"")}</td>
-        <td>${esc((i.via||"").split("(")[0])}</td>
-        <td>${esc(i.applied||"")}</td>
-        <td>${ i.link ? `<a href="${esc(i.link)}" target="_blank">${/Submitted/i.test(i.status||"")?'✔ Submitted':esc(i.status||'')}</a>` : `<span class="st">${esc(i.status||'')}</span>` }</td>
-      </tr>`).join("");
-    document.getElementById("apps").innerHTML = `
-      <table>
-        <thead><tr><th>#</th><th>Company / Role</th><th>Location</th><th>Via</th><th>Applied</th><th>Status</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
-  }
+  const awaiting=(H.recommendations||[]).filter(r=>(r.status||'awaiting')==='awaiting');
+  document.getElementById("recs").innerHTML = awaiting.length ? `
+    <div class="lead" style="border-left-color:var(--amber);margin-top:14px">
+      <b>🔒 ${awaiting.length} change${awaiting.length>1?'s':''} Coach wants your OK</b> — nothing applied yet.
+      ${awaiting.map(r=>`<div style="font-size:13px;margin-top:6px"><b>#${r.id}</b> ${esc(r.title)}${r.detail?`<div class="note" style="margin-top:1px">${esc(r.detail)}</div>`:''}</div>`).join("")}
+      <div class="note" style="margin-top:8px">Reply <b>"accept coach #N"</b> to apply, or <b>"reject coach #N"</b>.</div>
+    </div>` : '';
 
-  // ---- Statistics ----
-  const ST = window.Q_STATS || {};
-  const uniqueCompanies = new Set(A.map(i=>(i.company||"").trim())).size;
-  const days = new Set(A.map(i=>i.applied).filter(Boolean)).size || 1;
-  const avgPerDay = (total/days).toFixed(1);
-  const convPct = (ST.rolesSurfaced ? Math.round(total/ST.rolesSurfaced*100)+"%" : "—");
-  const projStart = ST.projectStart ? new Date(ST.projectStart) : null;
-  const daysRunning = projStart ? Math.floor((today - projStart)/86400000)+1 : null;
-  const shortlistRoles = (window.Q_SHORTLIST && Array.isArray(window.Q_SHORTLIST.roles)) ? window.Q_SHORTLIST.roles : [];
-  const fitVals = shortlistRoles.map(r=>r.fit).filter(f=>typeof f==='number');
-  const avgFit = fitVals.length ? Math.round(fitVals.reduce((a,b)=>a+b,0)/fitVals.length) : null;
-  function classify(i){
-    const s = ((i.company||"")+" "+(i.role||"")+" "+(i.via||"")).toLowerCase();
-    if(/hungerstation|delivery hero|ninja|amazon|last[- ]?mile|rider|dark[- ]?store|q-?commerce|quick commerce/.test(s)) return "Delivery / Q-commerce / Last-mile";
-    if(/qiddiya|giga|entertainment/.test(s)) return "Giga-project / Entertainment";
-    if(/royal palace|hotel|hospitality|oyo|resort/.test(s)) return "Hospitality";
-    if(/noon|marketplace|e-?commerce|ethra|cobone|retail/.test(s)) return "E-commerce / Marketplace";
-    if(/grg|foreground|consult|recruit|search/.test(s)) return "Recruiter / consultancy client roles";
-    return "Other operations";
-  }
-  const statCards = [
-    {n: (daysRunning!=null?daysRunning:'—'), l:"Days running"},
-    {n: total, l:"Applications submitted"},
-    {n: avgPerDay, l:"Avg submissions / day"},
-    {n: uniqueCompanies, l:"Companies applied to"},
-    {n: (ST.rolesSurfaced!=null?ST.rolesSurfaced:'—'), l:"Roles surfaced (approx)"},
-    {n: convPct, l:"Surfaced → submitted"},
-    {n: (avgFit!=null?avgFit:'—'), l:"Avg fit score (shortlist)"},
-    {n: (ST.searchesRun!=null?ST.searchesRun:'—'), l:"Searches run (approx)"},
+  const loops=[
+    ["🔎 Scout","finds roles → your shortlist","You / 🩺 Coach","you pick; Coach tracks the numbers"],
+    ["🔎 Scout","finds a new job site","🔗 Sync","sets up your profile there, then Scout searches it too"],
+    ["✍️ Polish","ideas you accept → your CV (new version)","🔎 Scout / 🔗 Sync","Scout builds CVs from it; Sync updates your live sites"],
+    ["📥 Radar","a reply or interview lands","your funnel","the numbers move; you get flagged"],
+    ["🩺 Coach","checks everyone + builds your To-Do","You","one daily summary; proposes bigger changes for your OK"]
   ];
-  document.getElementById("statcards").innerHTML = statCards.map(s=>`
-    <div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join("");
+  document.getElementById("loop").innerHTML = `<p class="note" style="margin-top:0">Each agent's output feeds the next — nothing is a dead end.</p><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">`+
+    loops.map(l=>`<div class="stat" style="padding:12px 14px"><div style="font-size:13px"><b>${esc(l[0])}</b> <span class="muted">${esc(l[1])}</span></div><div style="color:var(--blue)">↓</div><div style="font-size:13px"><b>${esc(l[2])}</b> <span class="muted">${esc(l[3])}</span></div></div>`).join("")+`</div>`;
 
-  const indTally = {};
-  A.forEach(i=>{const k=classify(i); indTally[k]=(indTally[k]||0)+1;});
-  const indMax = Math.max(1,...Object.values(indTally));
-  document.getElementById("industry").innerHTML = Object.entries(indTally)
-    .sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
-      <div style="margin:7px 0">
-        <div style="display:flex;justify-content:space-between;font-size:12.5px"><span>${esc(k)}</span><b>${v}</b></div>
-        <div class="bar"><i style="width:${Math.round(v/indMax*100)}%;background:var(--blue)"></i></div>
-      </div>`).join("") || '<span class="muted">—</span>';
-
-  document.getElementById("sources").innerHTML = (ST.sources||[]).map(s=>
-    `<span class="pill" style="background:var(--chip);color:var(--navy);margin:3px 4px 3px 0;display:inline-block">${esc(s)}</span>`).join("") || '<span class="muted">—</span>';
-
-  const compTally = {};
-  A.forEach(i=>{const c=(i.company||"").replace(/\s*\(.*$/,"").trim(); if(c) compTally[c]=(compTally[c]||0)+1;});
-  document.getElementById("companies").innerHTML = Object.entries(compTally)
-    .sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).map(([k,v])=>`
-      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin:6px 0"><span>${esc(k)}</span>${v>1?`<b>${v}</b>`:''}</div>`).join("") || '<span class="muted">—</span>';
-
-  document.getElementById("statnote").textContent = ST.note || "";
-
-  // ---- Profile suggestions (awaiting review) ----
-  const SG = window.Q_SUGGESTIONS || null;
-  if(!SG || !(SG.items||[]).length){
-    document.getElementById("suggestions").innerHTML = '<p class="muted">No suggestions pending — Polish proposes profile improvements here for your review.</p>';
-  }else{
-    const pending = SG.items.filter(i=>(i.status||'pending')==='pending');
-    const toApply = pending.filter(i=>i.type!=='question');
-    const questions = pending.filter(i=>i.type==='question');
-    const prPill = p => `<span class="pill" style="background:${p==='High'?'#fde8e8':p==='Medium'?'#fff4e5':'#eef1f6'};color:${p==='High'?'#c0392b':p==='Medium'?'#8a5a00':'var(--navy)'};font-size:10.5px">${esc(p||'')}</span>`;
-    const row = i => `
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
-        <span style="font-weight:800;color:var(--grey);min-width:26px">#${i.id}</span>
-        <span style="flex:1;font-size:13px">${esc(i.title)}</span>
-        ${prPill(i.priority)}
-      </div>`;
-    document.getElementById("suggestions").innerHTML = `
-      <div class="stat" style="margin-bottom:12px">
-        <div style="font-size:14px"><b>${pending.length}</b> suggestion${pending.length!==1?'s':''} waiting for you — <b>${toApply.length}</b> ready to apply, <b>${questions.length}</b> need your answer.</div>
-        <div class="note" style="margin-top:4px">Reply <b>"accept #"</b> to apply one to your profile, or <b>"reject #"</b> to delete it. Full wording in profile-improvement-suggestions.md.</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
-        <div class="stat">
-          <div class="l" style="margin-bottom:6px;font-weight:700;color:var(--navy)">Ready to apply (say "accept #")</div>
-          ${toApply.map(row).join("") || '<span class="muted">—</span>'}
-        </div>
-        <div class="stat">
-          <div class="l" style="margin-bottom:6px;font-weight:700;color:var(--navy)">Needs your answer</div>
-          ${questions.map(row).join("") || '<span class="muted">—</span>'}
-        </div>
-      </div>
-      <p class="note">Last benchmarked: ${esc(SG.updated||'')} · nothing changes your Master Profile until you accept it.</p>`;
-  }
-
-  // ---- Agent health (latest review) ----
-  const H = window.Q_HEALTH || null;
-  if(!H){
-    document.getElementById("health").innerHTML = '<p class="muted">No health review yet — the daily reviewer runs at 9:30 AM.</p>';
-  }else{
-    const rows = (H.agents||[]).map(a=>`
-      <tr><td><b>${esc(a.name)}</b></td>
-      <td><span class="pill ${a.status==='active'?'p-active':'p-off'}">${a.status==='active'?'Active':(esc(a.status))}</span></td>
-      <td class="muted">${esc(a.note||'')}</td></tr>`).join("");
-    const awaiting = (H.recommendations||[]).filter(r=>(r.status||'awaiting')==='awaiting');
-    const recBox = awaiting.length ? `
-      <div style="background:#eef5ff;border:1px solid #9ec5f0;border-left:5px solid var(--blue);border-radius:12px;padding:14px 16px;margin-bottom:12px">
-        <div style="font-weight:800;color:#1c4e80">🔒 ${awaiting.length} change${awaiting.length>1?'s':''} Coach proposed — awaiting your OK (nothing applied yet)</div>
-        ${awaiting.map(r=>`<div style="font-size:13px;margin-top:6px"><b>#${r.id}</b> ${esc(r.title)}${r.risk?` <span class="pill" style="font-size:10px;background:var(--chip);color:var(--navy)">${esc(r.risk)} risk</span>`:''}${r.detail?`<div class="muted" style="font-size:12px;margin-top:1px">${esc(r.detail)}</div>`:''}</div>`).join("")}
-        <div class="note" style="margin-top:8px">Reply <b>"accept coach #N"</b> to apply, or <b>"reject coach #N"</b> to drop.</div>
-      </div>` : "";
-    document.getElementById("health").innerHTML =
-      recBox + `
-      <div class="stat" style="margin-bottom:12px">
-        <div style="font-size:14px"><b>Overall:</b> ${esc(H.overall||'')}</div>
-        ${H.topRec?`<div class="metric" style="border-top:none;margin-top:8px;padding-top:0">⭐ <b>Top recommendation:</b> ${esc(H.topRec)}</div>`:''}
-        <div class="note">As of ${esc(H.date||'')}</div>
-      </div>
-      <table><thead><tr><th>Agent</th><th>Status</th><th>Latest note</th></tr></thead><tbody>${rows}</tbody></table>`;
-  }
-
-  // ---- Boards searched (latest run) ----
-  const SL = window.Q_SEARCHLOG || null;
-  if(!SL || !(SL.boards||[]).length){
-    document.getElementById("searchlog").innerHTML = '<p class="muted">No board-search log yet — the Morning shortlist agent writes this each run.</p>';
-  }else{
-    const searchedCount = SL.boards.filter(b=>b.searched).length;
-    const failed = SL.boards.filter(b=>!b.searched);
-    const dailyList = SL.boards.map(b=>esc(b.name)).join(" · ");
-    const alertBanner = failed.length ? `
-      <div style="background:#fff4e5;border:1px solid #f0b34e;border-left:5px solid #b7791f;border-radius:12px;padding:14px 16px;margin-bottom:14px">
-        <div style="font-weight:800;color:#8a5a00">⚠ ${failed.length} board${failed.length>1?'s':''} could not be searched — needs a fix, then re-run today</div>
-        ${failed.map(b=>`<div style="font-size:13px;margin-top:6px"><b>${esc(b.name)}</b> — ${esc(b.fix||b.note||'could not be reached')}</div>`).join("")}
-        <div class="note" style="margin-top:8px">Fix the item(s) above (e.g. sign in to the site in the connected browser), then ask Scout to re-run the shortlist — coverage will complete the same day.</div>
-      </div>` : "";
-    const items = SL.boards.map(b=>{
-      const ok = !!b.searched;
-      return `<div class="stat" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px">
-        <span class="pill ${ok?'p-active':'p-off'}" style="flex:0 0 auto;white-space:nowrap">${ok?'✓ Searched':'⚠ Needs fix'}</span>
-        <div><div style="font-weight:700;font-size:13.5px">${esc(b.name)}${(b.found!=null)?` <span class="muted">· ${b.found} found</span>`:''}</div>${(b.fix&&!ok)?`<div style="font-size:12px;margin-top:2px;color:#8a5a00"><b>Fix:</b> ${esc(b.fix)}</div>`:''}${b.note?`<div class="muted" style="font-size:12px;margin-top:2px">${esc(b.note)}</div>`:''}</div>
-      </div>`;
-    }).join("");
+  const SL=window.Q_SEARCHLOG||null;
+  if(!SL||!(SL.boards||[]).length){document.getElementById("searchlog").innerHTML='<p class="muted">No search yet today — Scout runs at 9:00 AM.</p>';}
+  else{
+    const done=SL.boards.filter(b=>b.searched).length;
+    const fail=SL.boards.filter(b=>!b.searched);
     document.getElementById("searchlog").innerHTML =
-      alertBanner +
-      `<p class="note" style="margin-top:0">Scout searches these boards <b>every morning</b>: ${dailyList}.</p>
-       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">${items}</div>
-       <p class="note">Latest run: ${esc(SL.date||'')} · <b>${searchedCount}/${SL.boards.length}</b> boards searched · ${esc(SL.note||'')}</p>`;
+      (fail.length?`<div class="lead" style="border-left-color:var(--amber)"><b>⚠ ${fail.length} site${fail.length>1?'s':''} couldn't be searched — needs a quick fix</b>${fail.map(b=>`<div style="font-size:13px;margin-top:5px"><b>${esc(b.name)}</b> — ${esc(b.fix||b.note||'could not reach it')}</div>`).join("")}<div class="note" style="margin-top:6px">Fix it, then reply "re-run" and Scout finishes today.</div></div>`:'')+
+      `<p class="note" style="margin-top:6px">Scout searches these every morning. Latest run: ${esc(SL.date||'')} · <b>${done}/${SL.boards.length}</b> done.</p>`+
+      `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${SL.boards.map(b=>`<div class="stat" style="display:flex;gap:10px;padding:11px 13px"><span class="pill ${b.searched?'p-active':'p-off'}" style="white-space:nowrap">${b.searched?'✓ searched':'⚠ skipped'}</span><div style="font-size:13px"><b>${esc(b.name)}</b>${b.found!=null?` <span class="muted">· ${b.found} found</span>`:''}</div></div>`).join("")}</div>`;
   }
 
-  // ---- Today's shortlist (latest run) ----
-  const S = window.Q_SHORTLIST || null;
-  function fitColor(f){ return f>=80?'var(--green)':(f>=65?'var(--amber)':'var(--red)'); }
-  if(!S || !(S.roles||[]).length){
-    document.getElementById("shortlist").innerHTML = '<p class="muted">No shortlist yet — the Morning shortlist agent runs at 8:00 AM.</p>';
-  }else{
-    const rows = S.roles.map(r=>{
-      const notInt = /not interested|passed|declined/i.test(r.status||'');
-      const applied = /applied/i.test(r.status||'');
-      const summaryCell = (r.jobSummary||r.companySummary) ? `
-          <div style="margin-top:6px;font-size:12px;line-height:1.5">
-            ${r.jobSummary?`<div><span class="muted">Role:</span> ${esc(r.jobSummary)}</div>`:''}
-            ${r.companySummary?`<div><span class="muted">Company:</span> ${esc(r.companySummary)}</div>`:''}
-          </div>` : '';
-      return `
-      <tr style="${notInt?'opacity:.5':''}">
-        <td>${r.n||''}</td>
-        <td>
-          <b>${esc(r.company)}</b> <span class="muted">— ${esc(r.title)}</span>
-          ${summaryCell}
-        </td>
-        <td><span style="font-weight:800;color:${fitColor(r.fit)}">${r.fit!=null?r.fit:'—'}</span>${r.fit!=null?'<span class="muted" style="font-size:11px">/100</span>':''}</td>
-        <td>${ applied ? '<span class="st">✔ Applied</span>' : notInt ? '<span class="muted" style="font-size:11.5px;font-weight:700">✕ Not interested</span>' : (r.link?`<a href="${esc(r.link)}" target="_blank">${esc(r.status||'New')}</a>`:esc(r.status||'New')) }</td>
-      </tr>`;
-    }).join("");
-    document.getElementById("shortlist").innerHTML =
-      (S.note?`<p class="note" style="margin-top:0">${esc(S.note)}</p>`:'') +
-      `<table><thead><tr><th>#</th><th>Company / Role — with summary</th><th>Fit</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
-       <p class="note">Latest run: ${esc(S.date||'')} · reply to Scout with the numbers you want to pursue — or the numbers you're <b>not</b> interested in, and they'll be dropped for good.</p>`;
-  }
+  document.getElementById("charter").innerHTML = `
+    <div style="font-size:13.5px"><b>🎯 Goal:</b> ${esc(CH.goal||'')}</div>
+    <div style="font-size:13.5px;margin-top:10px"><b>🚀 Direction:</b> ${esc(CH.direction||'')}</div>
+    <div style="font-size:13.5px;margin-top:10px"><b>🛡️ Guardrails:</b> ${esc(CH.guardrails||'')}</div>
+    <div class="note" style="margin-top:10px">Confirmed ${esc(CH.confirmed||'')} · nothing changes your CV or applies for you without your OK.</div>`;
 
-  // ---- Profile sync (live sites) ----
-  const SY = window.Q_SYNC || null;
-  if(!SY || !(SY.sites||[]).length){
-    document.getElementById("sync").innerHTML = '<p class="muted">No sync status yet — Sync runs weekly (Sat) and reports here.</p>';
-  }else{
-    const badge = st => {
-      const good = /in sync/i.test(st||'');
-      const warn = /needs|update|check/i.test(st||'');
-      const c = good ? 'p-active' : 'p-off';
-      return `<span class="pill ${c}" style="white-space:nowrap">${good?'✓ In sync':(warn?'⚠ '+esc(st):esc(st))}</span>`;
-    };
-    const siteRows = SY.sites.map(s=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
-        <span style="flex:1;font-weight:700;font-size:13px">${esc(s.name)}</span>
-        ${/in sync/i.test(s.status||'')?'<span class="pill p-active">✓ In sync</span>':`<span class="muted" style="font-size:12px">${esc(s.status||'')}</span>`}
-      </div>`).join("");
-    const nb = SY.newBoardsPending||0;
-    document.getElementById("sync").innerHTML = `
-      <div class="stat" style="margin-bottom:12px">
-        <div style="font-size:14px">Master Profile is at <b>v${SY.masterVersion!=null?SY.masterVersion:'—'}</b>. Sync keeps each live site matched to it. ${nb>0?`<b style="color:var(--amber)">${nb} new board${nb>1?'s':''} awaiting setup.</b>`:''}</div>
-        <div class="note" style="margin-top:4px">Sync prepares packs &amp; fills fields in an attended session — you create accounts, log in, and save. Runs weekly (Sat).</div>
-      </div>
-      <div class="stat">${siteRows}</div>
-      <p class="note">As of ${esc(SY.updated||'')} · ${esc(SY.note||'')}</p>`;
-  }
-
-  // ---- Closed-loop map (how agents feed each other) ----
-  const loops = [
-    ["🔎 Scout", "finds roles → shortlist + fit scores", "You / 🩺 Coach", "you pick; Coach syncs statuses & funnel"],
-    ["🔎 Scout", "finds a NEW job board → new-boards.md", "🔗 Sync", "sets up your profile there"],
-    ["🔎 Scout", "logs submitted apps → data-applied.js", "📥 Radar / 🩺 Coach", "Radar tracks replies; Coach counts the funnel"],
-    ["✍️ Polish", "accepted ideas → Master Profile (v↑)", "🔎 Scout / 🔗 Sync", "Scout builds CVs from it; Sync updates live sites"],
-    ["📥 Radar", "recruiter reply / interview found", "data-applied.js → funnel", "status moves; you get flagged"],
-    ["🩺 Coach", "checks every handoff happened", "You", "proposes fixes → you accept → applied"]
-  ];
-  document.getElementById("loop").innerHTML =
-    `<p class="note" style="margin-top:0">Each agent's output is another agent's input — nothing is a dead end.</p>
-     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">` +
-    loops.map(l=>`
-      <div class="stat" style="padding:12px 14px">
-        <div style="font-size:13px"><b>${esc(l[0])}</b> <span class="muted">${esc(l[1])}</span></div>
-        <div style="font-size:16px;color:var(--blue);line-height:1">↓</div>
-        <div style="font-size:13px"><b>${esc(l[2])}</b> <span class="muted">${esc(l[3])}</span></div>
-      </div>`).join("") + `</div>`;
-
-  document.getElementById("foot").textContent =
-    "Live from Queues/*.js · auto-refreshes every 5 min while open (or reload anytime). Built for Harbi's job search.";
-
-  // auto-refresh so newly-written agent data shows without a manual reload
+  document.getElementById("foot").textContent = "Live view · updates as the agents finish · refreshes every 5 min while open.";
   setTimeout(function(){ location.reload(); }, 300000);
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
