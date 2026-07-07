@@ -9,6 +9,10 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [1.1.1] — 2026-07-07
+### Fixed
+- **Closed the Scout↔Sync loop the other way** — once Sync sets up a new board, Scout now reads `data-sync.js` and adds that board to its daily search rotation. Previously a newly-added board (e.g. beBee) got a profile but was never searched.
+
 ## [1.1.0] — 2026-07-06
 ### Fixed
 - **CV intake** — setup now asks the user to attach the CV directly via **+ / paperclip** and verifies it's readable before continuing (fixes the empty-CV-field-on-submit bug where a form uploader dropped the file).
