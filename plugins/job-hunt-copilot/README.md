@@ -8,6 +8,8 @@ A self-driving job-search assistant for **Claude Cowork**. Run one setup skill a
 - **Coach** — grades each agent daily, tracks the funnel toward a North Star (interviews), verifies the handoffs.
 - **Sync** — keeps your live job-site profiles matched to your Master Profile; helps set up new boards.
 
+Everything the team needs from you lands in **one To-Do list** at the top of the dashboard, with **one plain daily summary** from Coach — so you act from a single place instead of chasing five agents. The dashboard has **4 tabs**: **Today** (the To-Do list — the only tab you must check), **Progress**, **My Profile**, **The Team**. Written in plain, everyday English throughout.
+
 Fully generic — **any profession, any country.** You always stay in control: it **never submits an application, sends a message, spends money, creates an account, or logs in for you.** Every CV line must be true and defensible.
 
 ---
@@ -31,9 +33,13 @@ Your CV (upload), name + contact email, target role(s) & seniority, location(s) 
 6. Open `Agent-System/progress-dashboard.html` to watch progress.
 
 ## Daily use
-- Reply to Scout with the **numbers you want** — or the numbers you're **not interested in**.
-- Reply **"accept #"** / **"reject #"** to Polish's profile suggestions.
-- You upload the CV and press **Submit / Save** — the agents never do that for you.
+Once a day Coach sends **one short summary**, and everything you need to do sits in the **To-Do list** on the dashboard's **Today** tab. You act by simply replying in chat:
+- **"show shortlist"** to see today's roles, then the **numbers you want** (or **"not interested in N"**).
+- **"accept all"** / **"accept #"** / **"reject #"** for Polish's profile suggestions.
+- **"go"** to let Sync fill and save a job-site profile once you're logged in.
+- **"what's new?"** any time — it reads your To-Do list and tells you the current items right then.
+
+You upload the CV and press **Submit / Save** — the agents never do that for you.
 
 ## Privacy & safety
 Everything lives in your own workspace folder. Keep passwords out of it. The agents are read-only on your inbox, never create accounts or log in, and never apply, send, or spend without you.
