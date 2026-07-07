@@ -9,6 +9,19 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [2.0.0] — 2026-07-07
+Big usability overhaul. Two problems from real use: the writing was too complex, and five agents each pinging separately felt scattered — the user couldn't tell what to do or when, and worried they'd missed something.
+### Added
+- **One shared To-Do list** (`data-todo.js`) — every agent that needs the user drops a plain item here (`{who, priority, added, title, reply}`), pinned at the top of the dashboard. The user acts from ONE place by replying, instead of chasing five agent chats.
+- **Tabbed dashboard** — rebuilt into 4 tabs that read like a story: **📌 Today** (headline + To-Do only), **📈 Progress** (North Star, funnel, numbers, applications), **📝 My Profile** (CV suggestions + job-site sync), **🤝 The Team** (all agents in one place with scores + notes). Expand/collapse sections replace the old wall of cards.
+- **"what's new?"** — the user can ask any time and the coordinator reads the To-Do list and answers right then.
+### Changed
+- **One daily ping, from Coach only** — Scout/Polish/Radar/Sync now run silently (`notifyOnCompletion: false`) and write to the To-Do list; Coach (`notifyOnCompletion: true`) tidies the list, carries forward anything not done (keeping the original date so "waiting N days" stays true), and sends the single plain daily summary. Radar keeps one exception: an immediate heads-up for a new interview invite or offer.
+- **Plain English everywhere** — every agent prompt and the dashboard now use short sentences, everyday words, and spell out shorthand.
+- **De-duplicated dashboard** — agents previously appeared in ~4 sections and numbers in ~3; each now lives in exactly one place.
+### Why MAJOR
+New file in the workspace structure (`data-todo.js`), a new dashboard layout, and changed agent notification behaviour — an existing install needs the new file and template, so this is a breaking change per the versioning rules below.
+
 ## [1.1.1] — 2026-07-07
 ### Fixed
 - **Closed the Scout↔Sync loop the other way** — once Sync sets up a new board, Scout now reads `data-sync.js` and adds that board to its daily search rotation. Previously a newly-added board (e.g. beBee) got a profile but was never searched.

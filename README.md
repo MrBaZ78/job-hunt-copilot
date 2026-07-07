@@ -1,6 +1,8 @@
 # Job-Hunt Copilot — Cowork plugin (marketplace repo)
 
-A self-driving job-search assistant for **Claude Cowork / Claude Code**. It interviews you once, builds your Master Career Profile from your CV, picks the right job boards for your country, and schedules a **5-agent team** (Scout finds roles + tailors CVs, Polish benchmarks your profile, Radar watches your inbox, Coach grades the team, Sync keeps your job-site profiles in step) feeding a **live dashboard**.
+A self-driving job-search assistant for **Claude Cowork / Claude Code**. It interviews you once, builds your Master Career Profile from your CV, picks the right job boards for your country, and schedules a **5-agent team** (Scout finds roles + tailors CVs, Polish benchmarks your profile, Radar watches your inbox, Coach grades the team, Sync keeps your job-site profiles in step) feeding a **live tabbed dashboard**.
+
+Everything the team needs from you lands in **one To-Do list** with **one plain daily summary** — so you act from a single place and never chase five separate agents. Written in plain, everyday English throughout.
 
 Fully generic — any profession, any country. It **never submits an application, sends a message, spends money, creates an account, or logs in for you.**
 
