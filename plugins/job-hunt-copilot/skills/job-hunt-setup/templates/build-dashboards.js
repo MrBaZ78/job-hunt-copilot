@@ -1,333 +1,130 @@
 #!/usr/bin/env node
-/* Rebuilds the two PINNED artifacts from the live queue files:
-     • dashboard-pinned.html  — the 4-tab dashboard with all 10 queues inlined (self-contained)
-     • daily-todo.html        — the interactive Daily To-Do panel (jobs + CV upgrades + asks)
-   This file is the single source of truth for the Daily To-Do panel's look + logic.
+/* Rebuilds the PINNED dashboard from the live queue files.
+   THE DASHBOARD is the one hub: its "Today" tab gets a Daily Hub injected in — a
+   ▶ Run-now agent menu + the actionable To-Do (jobs / CV upgrades / asks). The old
+   standalone daily-todo and daily-menu tiles (pre-v2.5.0) become "moved" pointers.
 
-   Run:  node build-dashboards.js            (reads ./Queues)
-         node build-dashboards.js --src DIR  (reads DIR instead — used when the
-                                              OneDrive mount truncates a freshly-written
-                                              queue file and the agent staged clean copies)
-   After it writes the HTML, the caller (the daily-refresh scheduled task) updates the
-   live artifacts with update_artifact for ids "dashboard" and "daily-todo".            */
+   Run:  node build-dashboards.js [--src DIR]   (--src used when a synced-folder mount truncates)
+
+   Agents for the Run-now menu come from data-agents.js: each agent entry that has a
+   `task` field (its scheduled-task id) is shown with a Run-now button. Setup writes those
+   task ids in STEP 5; the updater backfills them. No task ids are hardcoded here.
+
+   NOTE: a pinned-artifact sandbox blocks sendPrompt + scripted clipboard, so To-Do actions
+   show a selectable line to copy/paste into the chat; the ONE working button bridge is
+   window.cowork.runScheduledTask (used by the Run-now buttons). */
 
 const fs = require("fs");
 const path = require("path");
-
 const base = __dirname;
 const srcIx = process.argv.indexOf("--src");
 const qdir = srcIx > -1 ? process.argv[srcIx + 1] : path.join(base, "Queues");
 
 const FILES = ["data-applied.js","data-shortlist.js","data-searchlog.js","data-health.js",
-  "data-stats.js","data-suggestions.js","data-sync.js","data-charter.js",
-  "data-agents.js","data-todo.js"];
+  "data-stats.js","data-suggestions.js","data-sync.js","data-charter.js","data-agents.js","data-todo.js"];
 
-/* ---- read + truncation guard ---- */
-const raw = {};
-const truncated = [];
-for (const f of FILES) {
-  const c = fs.readFileSync(path.join(qdir, f), "utf8");
-  if (!c.trimEnd().endsWith("};")) truncated.push(f);
-  raw[f] = c;
-}
-if (truncated.length) {
-  console.error("TRUNCATED queue files (OneDrive half-sync): " + truncated.join(", "));
-  console.error("Stage clean copies (Read tool -> a folder) and re-run with --src that folder.");
-  process.exit(1);
-}
+const raw = {}; const truncated = [];
+for (const f of FILES) { const c = fs.readFileSync(path.join(qdir, f), "utf8");
+  if (!c.trimEnd().endsWith("};")) truncated.push(f); raw[f] = c; }
+if (truncated.length) { console.error("TRUNCATED queue files: " + truncated.join(", ") + " — stage clean copies (Read tool -> a folder) and re-run with --src that folder."); process.exit(1); }
 
-/* ---- evaluate the queues to get the data objects ---- */
-const window = {};
-for (const f of FILES) { new Function("window", raw[f])(window); }
+const window = {}; for (const f of FILES) { new Function("window", raw[f])(window); }
 
-/* =================== 1) DASHBOARD (inline all queues) =================== */
-let dash = fs.readFileSync(path.join(base, "progress-dashboard.html"), "utf8");
-if (!dash.trimEnd().endsWith("</html>")) { console.error("dashboard template truncated"); process.exit(1); }
-for (const f of FILES) {
-  const tag = `<script src="Queues/${f}"></script>`;
-  if (!dash.includes(tag)) { console.error("missing tag " + f); process.exit(1); }
-  dash = dash.replace(tag, `<script>\n/* inlined ${f} */\n${raw[f]}\n</script>`);
-}
-dash = dash.replace("setTimeout(function(){ location.reload(); }, 300000);",
-  "/* auto-reload removed for pinned artifact; use the Reload button */");
-fs.writeFileSync(path.join(base, "dashboard-pinned.html"), dash);
-
-/* =================== 2) DAILY TO-DO panel =================== */
-const SH = window.Q_SHORTLIST || {};
-const SG = window.Q_SUGGESTIONS || {};
-const SY = window.Q_SYNC || {};
-const TD = window.Q_TODO || {};
+const SH = window.Q_SHORTLIST || {}, SG = window.Q_SUGGESTIONS || {}, SY = window.Q_SYNC || {}, TD = window.Q_TODO || {}, AG = window.Q_AGENTS || {};
 const DATE = SH.date || SG.updated || new Date().toISOString().slice(0, 10);
-
-const JOBS = (SH.roles || []).map(r => ({
-  n: r.n, company: r.company, title: r.title, fit: r.fit,
-  loc: r.location || "", ds: r.jobSummary || "", cs: r.companySummary || "", link: r.link || "#"
-}));
-
+const JOBS = (SH.roles || []).filter(r => !/applied/i.test(r.status || "")).map(r => ({
+  n: r.n, company: r.company, title: r.title, fit: r.fit, loc: r.location || "", ds: r.jobSummary || "", cs: r.companySummary || "", link: r.link || "#" }));
 const pend = (SG.items || []).filter(i => (i.status || "pending") === "pending");
-const SUGG = pend.filter(i => i.type !== "question")
-  .sort((a, b) => (a.priority === "High" ? 0 : 1) - (b.priority === "High" ? 0 : 1))
-  .map(i => ({ id: i.id, pr: i.priority, t: i.title }));
+const SUGG = pend.filter(i => i.type !== "question").sort((a,b)=>(a.priority==="High"?0:1)-(b.priority==="High"?0:1)).map(i => ({ id: i.id, pr: i.priority, t: i.title }));
 const qCount = pend.filter(i => i.type === "question").length;
 const sitesBehind = (SY.sites || []).filter(s => !/in sync|up to date/i.test(s.status || "")).map(s => s.name);
-
 const ASKS = [];
-if (qCount) ASKS.push({ key: "questions", ic: "❓",
-  nm: qCount + " quick yes/no question" + (qCount > 1 ? "s" : "") + " from Polish",
-  ds: "Answering these opens up more matching jobs. I'll read them out and you answer yes/no.",
-  label: "Answer them", cmd: "let's answer the open profile questions" });
-if (sitesBehind.length) ASKS.push({ key: "sync", ic: "🔗",
-  nm: sitesBehind.length + " job-site profile" + (sitesBehind.length > 1 ? "s" : "") + " behind your latest CV",
-  ds: sitesBehind.join(", ") + ". Log into each first, then I'll fill and save them for you.",
-  label: "Help me sync", cmd: "help me sync my job-site profiles" });
-// carry any Chief-of-Staff one-off todo items (e.g. a pending repo/admin chore)
-(TD.items || []).filter(i => /chief of staff/i.test(i.who || "")).forEach(i =>
-  ASKS.push({ key: "todo" + i.id, ic: "🛠️", nm: (i.title || "").split("—")[0].split(".")[0].slice(0, 90),
-    ds: i.title || "", label: "Do it", cmd: i.reply || "" }));
+if (qCount) ASKS.push({ key:"questions", ic:"❓", nm:qCount+" quick yes/no question"+(qCount>1?"s":"")+" from Polish", ds:"Answering these opens up more matching jobs. I'll read them out and you answer yes/no.", label:"Answer them", cmd:"let's answer the open profile questions" });
+if (sitesBehind.length) ASKS.push({ key:"sync", ic:"🔗", nm:sitesBehind.length+" job-site profile"+(sitesBehind.length>1?"s":"")+" behind your latest CV", ds:sitesBehind.join(", ")+". Log into each first, then I'll fill and save them for you.", label:"Help me sync", cmd:"help me sync my job-site profiles" });
+(TD.items || []).filter(i => /chief of staff/i.test(i.who || "")).forEach(i => ASKS.push({ key:"todo"+i.id, ic:"🛠️", nm:(i.title||"").split("—")[0].split(".")[0].slice(0,90), ds:i.title||"", label:"Do it", cmd:i.reply||"" }));
 
-const DATA = `const DATE = ${JSON.stringify(DATE)};
-const JOBS = ${JSON.stringify(JOBS, null, 2)};
-const SUGGESTIONS = ${JSON.stringify(SUGG, null, 2)};
-const ASKS = ${JSON.stringify(ASKS, null, 2)};`;
+// Run-now menu: every agent in data-agents.js that carries a scheduled-task id.
+const AGENTS = ((AG.agents) || []).filter(a => a && a.task).map(a => ({
+  ic: a.ic || "▶", nm: (a.name || "").split(/\s*[—–-]\s*/)[0].trim(), md: a.md || a.short || a.goal || "", mt: a.mt || a.time || "", task: a.task }));
 
-fs.writeFileSync(path.join(base, "daily-todo.html"), PANEL(DATA));
-console.log(`Built: dashboard-pinned.html + daily-todo.html  (${JOBS.length} jobs, ${SUGG.length} upgrades, ${ASKS.length} asks, date ${DATE})`);
+const HUBDATA = "const HUB_DATE="+JSON.stringify(DATE)+";const HUB_JOBS="+JSON.stringify(JOBS)+";const HUB_SUGG="+JSON.stringify(SUGG)+";const HUB_ASKS="+JSON.stringify(ASKS)+";const HUB_AGENTS="+JSON.stringify(AGENTS)+";";
 
-/* ---- panel template (styles + render logic fixed; DATA injected) ---- */
-function PANEL(DATA_BLOCK) {
-return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Your Daily To-Do — take action</title>
-<style>
-  :root{ color-scheme: light;
-    --navy:#1f2a44; --grey:#5b6472; --line:#e6e8ee; --bg:#f5f6f8; --card:#ffffff;
-    --green:#1f9d55; --blue:#2b6cb0; --red:#c0392b; --chip:#eef1f6; --amber:#b7791f; }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--navy);line-height:1.45;
-    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  .wrap{max-width:780px;margin:0 auto;padding:22px 18px 110px}
-  h1{font-size:21px;margin:0 0 3px}
-  .sub{color:var(--grey);font-size:13.5px;margin:0 0 14px}
-  .how{background:#eef4fb;border:1px solid #d3e2f4;border-radius:12px;padding:11px 14px;
-    font-size:13px;color:var(--navy);margin:0 0 18px}
-  .how b{color:var(--blue)}
-  h2{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey);
-    margin:22px 0 9px;font-weight:800}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
-    padding:14px 16px;margin-bottom:11px}
-  .row{display:flex;gap:13px;align-items:flex-start}
-  .ic{font-size:22px;line-height:1;flex:none;width:28px;text-align:center;margin-top:1px}
-  .mid{flex:1;min-width:0}
-  .nm{font-weight:800;font-size:15px}
-  .ds{font-size:13.5px;margin-top:3px;color:#333}
-  .meta{font-size:12px;color:var(--grey);margin-top:6px}
-  .fit{display:inline-block;font-weight:800;font-size:12px;background:var(--chip);
-    color:var(--navy);border-radius:20px;padding:2px 9px;margin-left:6px}
-  .link{color:var(--blue);text-decoration:none;font-size:12.5px;font-weight:700}
-  .link:hover{text-decoration:underline}
-  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;align-items:center}
-  .btn{border:none;cursor:pointer;font:inherit;font-weight:700;font-size:13px;
-    border-radius:9px;padding:8px 14px;white-space:nowrap;transition:opacity .15s,background .15s}
-  .btn:disabled{opacity:.55;cursor:default}
-  .b-yes{background:var(--green);color:#fff}
-  .b-no{background:#fff;color:var(--red);border:1.5px solid var(--red)}
-  .b-go{background:var(--blue);color:#fff}
-  .b-all{background:var(--navy);color:#fff}
-  .badge{display:inline-block;font-weight:800;font-size:12px;border-radius:8px;padding:6px 10px}
-  .badge.yes{background:#e6f5ec;color:var(--green)}
-  .badge.no{background:#fdecea;color:var(--red)}
-  .badge.go{background:#e8f0f9;color:var(--blue)}
-  .undo{background:none;border:none;color:var(--grey);font:inherit;font-size:12px;
-    text-decoration:underline;cursor:pointer;padding:4px}
-  .note{font-size:12.5px;color:var(--grey);margin:4px 0 0}
-  .empty{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;font-size:13.5px}
-  .toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--navy);
-    color:#fff;font-size:13px;font-weight:600;padding:11px 16px;border-radius:10px;opacity:0;
-    transition:opacity .2s;pointer-events:none;max-width:92%;text-align:center;z-index:60}
-  .toast.show{opacity:.98}
-  .outbox{position:fixed;left:0;right:0;bottom:0;background:#12324f;color:#fff;display:none;
-    align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;
-    box-shadow:0 -2px 14px rgba(0,0,0,.22);z-index:50}
-  .outbox.show{display:flex}
-  .outbox .oc{font-weight:800;font-size:14px}
-  .outbox .os{font-size:11.5px;color:#cfe0f5;margin-top:1px}
-  .outbox .sendbtn{background:#ffd67a;color:#12324f;border:none;border-radius:10px;
-    padding:11px 16px;font:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>Your Daily To-Do</h1>
-  <p class="sub" id="sub">Pick what you want, then send it to me in one go.</p>
-  <div class="how">
-    <b>How this works:</b> tap your choices below (Apply / Accept / Reject). When you're done, hit
-    <b>📋 Send my picks</b> at the bottom — it drops one message into the chat for you to send, and I do them all.
-    Buttons can't act on their own yet, so that one send is what makes it happen. Nothing is ever submitted or logged in for you.
-  </div>
-  <div id="root"></div>
-</div>
-<div class="toast" id="toast"></div>
-<div class="outbox" id="outbox">
-  <div><div class="oc" id="obcount">0 picks ready</div><div class="os">Sends one message to the chat — you press enter.</div></div>
-  <button class="sendbtn" id="obsend">📋 Send my picks</button>
-</div>
-<script>
-${DATA_BLOCK}
+let dash = fs.readFileSync(path.join(base, "progress-dashboard.html"), "utf8");
+if (!dash.trimEnd().endsWith("</html>")) { console.error("dashboard template truncated"); process.exit(1); }
+for (const f of FILES) { const tag = `<script src="Queues/${f}"></script>`;
+  if (!dash.includes(tag)) { console.error("missing tag " + f); process.exit(1); }
+  dash = dash.replace(tag, `<script>\n/* inlined ${f} */\n${raw[f]}\n</script>`); }
+dash = dash.replace("setTimeout(function(){ location.reload(); }, 300000);", "/* auto-reload removed */");
+dash = dash.replace("</head>", HUB_STYLE() + "\n</head>");
+dash = dash.replace('<div id="headline"></div>',
+  '<div id="headline"></div>\n<h2>&#9654; Daily Hub — run a helper, or act on what is waiting</h2>\n<div id="hub"></div>');
+dash = dash.replace("</body>", HUB_DOM() + HUB_SCRIPT() + "\n</body>");
+fs.writeFileSync(path.join(base, "dashboard-pinned.html"), dash);
 
-const LS = "dailytodo:"+DATE;
-function load(){ try{ return JSON.parse(localStorage.getItem(LS)||"{}"); }catch(e){ return {}; } }
-function save(s){ try{ localStorage.setItem(LS, JSON.stringify(s)); }catch(e){} }
-let STATE = load();
-document.getElementById("sub").insertAdjacentHTML("beforeend",
-  ' &nbsp;·&nbsp; ' + new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}));
+// Retire the pre-v2.5.0 standalone tiles into pointers (harmless if never registered).
+fs.writeFileSync(path.join(base, "daily-todo.html"), STUB("Your Daily To-Do actions now live in the <b>Dashboard &#8594; Today tab</b> (top: Daily Hub) — jobs, CV upgrades and asks, all with the helpers."));
+fs.writeFileSync(path.join(base, "daily-menu.html"), STUB("The <b>▶ Run now</b> helper buttons now live at the top of the <b>Dashboard &#8594; Today tab</b>, next to the jobs, CV upgrades and asks."));
+console.log(`Built: dashboard-pinned.html (hub in Today) + daily-todo.html/daily-menu.html (pointers)  (${JOBS.length} jobs, ${SUGG.length} upgrades, ${ASKS.length} asks, ${AGENTS.length} agents, ${DATE})`);
 
-/* registries so we can turn saved picks into one instruction */
-const JOBMAP={}; JOBS.forEach(j=>{ JOBMAP["job:"+j.n]=j; });
-const ASKMAP={}; ASKS.forEach(a=>{ ASKMAP["ask:"+a.key]=a; });
+function HUB_STYLE(){ return `<style>
+  #hub .menu-card{background:#fff;border:1px solid #e6e8ee;border-radius:14px;padding:11px 14px;margin-bottom:9px;display:flex;gap:12px;align-items:center}
+  #hub .menu-card .mm{flex:1;min-width:0}
+  #hub .menu-card .mn{font-weight:800;font-size:14px} #hub .menu-card .md{font-size:12.5px;color:#333} #hub .menu-card .mt{font-size:11.5px;color:#5b6472;margin-top:2px}
+  #hub .runbtn{flex:none;border:none;cursor:pointer;font:inherit;font-weight:700;font-size:13px;background:#2b6cb0;color:#fff;border-radius:9px;padding:9px 13px;white-space:nowrap}
+  #hub .runbtn:disabled{opacity:.6;cursor:default} #hub .runbtn.done{background:#1f9d55}
+  #hub .hcard{background:#fff;border:1px solid #e6e8ee;border-radius:14px;padding:14px 16px;margin-bottom:11px}
+  #hub .hnm{font-weight:800;font-size:15px} #hub .hds{font-size:13.5px;margin-top:3px;color:#333}
+  #hub .hmeta{font-size:12px;color:#5b6472;margin-top:6px}
+  #hub .fitc{display:inline-block;font-weight:800;font-size:12px;background:#eef1f6;color:#1f2a44;border-radius:20px;padding:2px 9px;margin-left:6px}
+  #hub .hacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;align-items:center}
+  #hub .hbtn{border:none;cursor:pointer;font:inherit;font-weight:700;font-size:13px;border-radius:9px;padding:8px 14px;white-space:nowrap}
+  #hub .hbtn:disabled{opacity:.55;cursor:default}
+  #hub .yes{background:#1f9d55;color:#fff} #hub .no{background:#fff;color:#c0392b;border:1.5px solid #c0392b} #hub .go{background:#2b6cb0;color:#fff} #hub .all{background:#1f2a44;color:#fff}
+  #hub .hbadge{display:inline-block;font-weight:800;font-size:12px;border-radius:8px;padding:6px 10px}
+  #hub .hbadge.y{background:#e6f5ec;color:#1f9d55} #hub .hbadge.n{background:#fdecea;color:#c0392b} #hub .hbadge.g{background:#e8f0f9;color:#2b6cb0}
+  #hub .hundo{background:none;border:none;color:#5b6472;font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:4px}
+  #hub .hsec{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:#5b6472;font-weight:800;margin:16px 0 8px}
+  #hubtoast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:#1f2a44;color:#fff;font-size:13px;font-weight:600;padding:11px 16px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:92%;text-align:center;z-index:80}
+  #hubtoast.show{opacity:.98}
+  #huboutbox{position:fixed;left:0;right:0;bottom:0;background:#12324f;color:#fff;display:none;flex-direction:column;gap:8px;padding:12px 18px 14px;box-shadow:0 -2px 14px rgba(0,0,0,.22);z-index:70}
+  #huboutbox.show{display:flex}
+  #huboutbox .ot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  #huboutbox .oc{font-weight:800;font-size:14px} #huboutbox .os{font-size:11.5px;color:#cfe0f5}
+  #huboutbox input{width:100%;background:#0d2740;color:#fff;border:1px solid #2c4a66;border-radius:9px;padding:10px 12px;font:inherit;font-size:13px;font-weight:600}
+  #huboutbox .sb{background:#ffd67a;color:#12324f;border:none;border-radius:10px;padding:10px 15px;font:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
+</style>`; }
 
-function toast(html, ms){ const t=document.getElementById("toast"); t.innerHTML=html; t.classList.add("show");
-  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"), ms||3200); }
-function mk(cls,label){ const b=document.createElement("button"); b.className="btn "+cls; b.textContent=label; return b; }
-function section(t){ const h=document.createElement("h2"); h.textContent=t; const root=document.getElementById("root"); root.appendChild(h); }
+function HUB_DOM(){ return `<div id="hubtoast"></div>
+<div id="huboutbox"><div class="ot"><div class="oc" id="hubcount">0 picks ready</div><button class="sb" id="hubsend">\u{1F4CB} Copy line</button></div>
+<input id="hubtext" readonly onclick="this.select()" /><div class="os">Tap the line, press Ctrl/Cmd+C, paste into the chat and hit enter — or read it to me.</div></div>`; }
 
-/* build ONE plain instruction from every saved pick */
-function buildInstruction(){
-  const applyJ=[],passJ=[],accS=[],rejS=[],askC=[];
-  Object.keys(STATE).forEach(function(k){
-    const v=STATE[k];
-    if(k.indexOf("job:")===0){ (v==="yes"?applyJ:passJ).push(k.slice(4)); }
-    else if(k.indexOf("sug:")===0){ (v==="yes"?accS:rejS).push(k.slice(4)); }
-    else if(k.indexOf("ask:")===0 && v==="go"){ const a=ASKMAP[k]; if(a && a.cmd) askC.push(a.cmd); }
-  });
-  const parts=[];
-  if(applyJ.length) parts.push("apply to job"+(applyJ.length>1?"s":"")+" "+applyJ.join(", "));
-  if(passJ.length)  parts.push("not interested in job"+(passJ.length>1?"s":"")+" "+passJ.join(", "));
-  if(accS.length)   parts.push("accept CV upgrade"+(accS.length>1?"s":"")+" "+accS.join(", "));
-  if(rejS.length)   parts.push("reject CV upgrade"+(rejS.length>1?"s":"")+" "+rejS.join(", "));
-  askC.forEach(function(c){ parts.push(c); });
-  const count=applyJ.length+passJ.length+accS.length+rejS.length+askC.length;
-  return { count: count, text: parts.length ? ("From my Daily To-Do, please: "+parts.join("; ")+".") : "" };
-}
-function renderOutbox(){
-  const bar=document.getElementById("outbox"); const r=buildInstruction();
-  if(!r.count){ bar.classList.remove("show"); return; }
-  bar.classList.add("show");
-  document.getElementById("obcount").textContent = r.count+" pick"+(r.count>1?"s":"")+" ready to send";
-}
-function trySend(text){
-  const fns=[window.sendPrompt, window.cowork&&window.cowork.sendPrompt,
-             window.parent&&window.parent.sendPrompt, window.top&&window.top.sendPrompt];
-  for(var i=0;i<fns.length;i++){ if(typeof fns[i]==="function"){ try{ fns[i](text); return true; }catch(e){} } }
-  return false;
-}
-function sendAll(){
-  const r=buildInstruction(); if(!r.count) return;
-  const sent=trySend(r.text);
-  try{ if(navigator.clipboard) navigator.clipboard.writeText(r.text); }catch(e){}
-  if(sent) toast("Sent "+r.count+" to chat ✓ — I'm on it.", 4000);
-  else toast("📋 Copied. Now click the chat box, press <b>Ctrl/Cmd&nbsp;+&nbsp;V</b> and hit enter — I'll do all "+r.count+".", 7000);
-}
-document.getElementById("obsend").onclick = sendAll;
+function HUB_SCRIPT(){ return `<script>
+(function(){
+${HUBDATA}
+var LS="hub:"+HUB_DATE;
+function load(){try{return JSON.parse(localStorage.getItem(LS)||"{}");}catch(e){return {};}}
+function save(s){try{localStorage.setItem(LS,JSON.stringify(s));}catch(e){}}
+var ST=load();
+var ASKMAP={}; HUB_ASKS.forEach(function(a){ASKMAP["ask:"+a.key]=a;});
+function toast(h,ms){var t=document.getElementById("hubtoast");t.innerHTML=h;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show");},ms||3200);}
+function mk(c,l){var b=document.createElement("button");b.className="hbtn "+c;b.textContent=l;return b;}
+function bld(){var applyJ=[],passJ=[],accS=[],rejS=[],askC=[];Object.keys(ST).forEach(function(k){var v=ST[k];if(k.indexOf("job:")===0){(v==="yes"?applyJ:passJ).push(k.slice(4));}else if(k.indexOf("sug:")===0){(v==="yes"?accS:rejS).push(k.slice(4));}else if(k.indexOf("ask:")===0&&v==="go"){var a=ASKMAP[k];if(a&&a.cmd)askC.push(a.cmd);}});var p=[];if(applyJ.length)p.push("apply to job"+(applyJ.length>1?"s":"")+" "+applyJ.join(", "));if(passJ.length)p.push("not interested in job"+(passJ.length>1?"s":"")+" "+passJ.join(", "));if(accS.length)p.push("accept CV upgrade"+(accS.length>1?"s":"")+" "+accS.join(", "));if(rejS.length)p.push("reject CV upgrade"+(rejS.length>1?"s":"")+" "+rejS.join(", "));askC.forEach(function(c){p.push(c);});var n=applyJ.length+passJ.length+accS.length+rejS.length+askC.length;return {count:n,text:p.length?("From my Daily To-Do, please: "+p.join("; ")+"."):""};}
+function outbox(){var bar=document.getElementById("huboutbox");var r=bld();if(!r.count){bar.classList.remove("show");return;}bar.classList.add("show");document.getElementById("hubcount").textContent=r.count+" pick"+(r.count>1?"s":"")+" ready — copy the line:";document.getElementById("hubtext").value=r.text;}
+function copyPicks(){var r=bld();if(!r.count)return;var box=document.getElementById("hubtext");box.value=r.text;box.focus();box.select();try{box.setSelectionRange(0,r.text.length);}catch(e){}var ok=false;try{ok=document.execCommand("copy");}catch(e){}try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(r.text).then(function(){},function(){});}catch(e){}toast(ok?"Copied &#10003; — paste (Ctrl/Cmd+V) into the chat and hit enter.":"Selected below — press <b>Ctrl/Cmd+C</b>, then paste into the chat. Or read it to me.",6000);}
+document.getElementById("hubsend").onclick=copyPicks;
+function paint(el,v){el._y.disabled=true;el._n.disabled=true;var t=el._a.querySelector(".hbadge");if(!t){t=document.createElement("span");el._a.insertBefore(t,el._a.firstChild);}t.className="hbadge "+(v==="yes"?"y":"n");t.textContent=el._k==="job"?(v==="yes"?"✓ Apply — queued":"✕ Passed — queued"):(v==="yes"?"✓ Accept — queued":"✕ Reject — queued");if(!el._a.querySelector(".hundo")){var u=document.createElement("button");u.className="hundo";u.textContent="undo";u.onclick=function(){delete ST[el._key];save(ST);el._y.disabled=false;el._n.disabled=false;if(t)t.remove();u.remove();outbox();};el._a.appendChild(u);}}
+function choose(el,k,v){ST[k]=v;save(ST);paint(el,v);outbox();}
+function runAgent(task,nm,btn){btn.disabled=true;var old=btn.textContent;btn.textContent="Starting…";try{if(window.cowork&&typeof window.cowork.runScheduledTask==="function"){window.cowork.runScheduledTask(task);btn.textContent="✓ Started";btn.classList.add("done");toast(nm+" is running — I'll message you when it's done.",4000);}else{throw 0;}}catch(e){btn.textContent=old;btn.disabled=false;toast('Couldn\\'t start it here — type "run '+nm+'" in chat.',5000);}}
+function sec(t){var h=document.createElement("div");h.className="hsec";h.textContent=t;root.appendChild(h);}
+var root=document.getElementById("hub");if(!root)return;
+if(HUB_AGENTS.length){sec("▶ Start a helper early");HUB_AGENTS.forEach(function(a){var el=document.createElement("div");el.className="menu-card";el.innerHTML='<div style="font-size:20px;flex:none;width:26px;text-align:center">'+a.ic+'</div><div class="mm"><div class="mn">'+a.nm+'</div><div class="md">'+a.md+'</div><div class="mt">'+(a.mt?"Runs on its own · "+a.mt:"")+'</div></div>';var b=document.createElement("button");b.className="runbtn";b.textContent="▶ Run now";b.onclick=function(){runAgent(a.task,a.nm,b);};el.appendChild(b);root.appendChild(el);});}
+if(HUB_JOBS.length){sec("① New jobs to review");HUB_JOBS.forEach(function(j){var kk="job:"+j.n;var el=document.createElement("div");el.className="hcard";el.innerHTML='<div class="hnm">'+j.company+' <span class="fitc">'+j.fit+'% fit</span></div><div class="hds"><b>'+j.title+'</b> — '+j.ds+'</div>'+(j.cs?'<div class="hds" style="margin-top:6px"><b>About '+j.company+':</b> '+j.cs+'</div>':'')+'<div class="hmeta">'+(j.loc?j.loc+' &nbsp;·&nbsp; ':'')+'<a href="'+j.link+'" target="_blank" rel="noopener" style="color:#2b6cb0;font-weight:700;text-decoration:none">Open the listing ↗</a></div>';var a=document.createElement("div");a.className="hacts";var y=mk("yes","✓ Apply"),n=mk("no","✕ Not interested");el._k="job";el._key=kk;el._y=y;el._n=n;el._a=a;y.onclick=function(){choose(el,kk,"yes");};n.onclick=function(){choose(el,kk,"no");};a.appendChild(y);a.appendChild(n);el.appendChild(a);if(ST[kk])paint(el,ST[kk]);root.appendChild(el);});}
+if(HUB_SUGG.length){sec("② CV wording upgrades (Polish)");var ac=document.createElement("div");ac.className="hcard";ac.innerHTML='<div class="hnm">'+HUB_SUGG.length+' upgrades ready</div><div class="hmeta">Queue all in one tap, or decide each below.</div>';var aa=document.createElement("div");aa.className="hacts";var ab=mk("all","✓ Accept all");ab.onclick=function(){document.querySelectorAll("[data-hsug]").forEach(function(c){ST["sug:"+c.getAttribute("data-hsug")]="yes";paint(c,"yes");});save(ST);outbox();ab.disabled=true;ab.textContent="✓ All queued";};aa.appendChild(ab);ac.appendChild(aa);root.appendChild(ac);HUB_SUGG.forEach(function(s){var kk="sug:"+s.id;var el=document.createElement("div");el.className="hcard";el.setAttribute("data-hsug",s.id);el.innerHTML='<div class="hds"><b>'+s.pr+'</b> — '+s.t+'</div>';var a=document.createElement("div");a.className="hacts";var y=mk("yes","✓ Accept"),n=mk("no","✕ Reject");el._k="sug";el._key=kk;el._y=y;el._n=n;el._a=a;y.onclick=function(){choose(el,kk,"yes");};n.onclick=function(){choose(el,kk,"no");};a.appendChild(y);a.appendChild(n);el.appendChild(a);if(ST[kk])paint(el,ST[kk]);root.appendChild(el);});}
+if(HUB_ASKS.length){sec("③ Other quick asks");HUB_ASKS.forEach(function(a){var kk="ask:"+a.key;var el=document.createElement("div");el.className="hcard";el.innerHTML='<div class="hnm">'+a.ic+' '+a.nm+'</div><div class="hds">'+a.ds+'</div>';var ac=document.createElement("div");ac.className="hacts";var g=mk("go",a.label);function mark(){g.disabled=true;if(!ac.querySelector(".hbadge"))ac.insertAdjacentHTML("afterbegin",'<span class="hbadge g">queued</span>');if(!ac.querySelector(".hundo")){var u=document.createElement("button");u.className="hundo";u.textContent="undo";u.onclick=function(){delete ST[kk];save(ST);g.disabled=false;var b=ac.querySelector(".hbadge");if(b)b.remove();u.remove();outbox();};ac.appendChild(u);}}g.onclick=function(){ST[kk]="go";save(ST);mark();outbox();};ac.appendChild(g);el.appendChild(ac);if(ST[kk])mark();root.appendChild(el);});}
+outbox();
+})();
+</script>`; }
 
-function pick(el, key, val){
-  STATE[key]=val; save(STATE); paintCard(el, val); renderOutbox();
-}
-function paintCard(el, val){
-  const acts=el._acts; el._yes.disabled=true; el._no.disabled=true;
-  let tag=acts.querySelector(".badge");
-  if(!tag){ tag=document.createElement("span"); acts.insertBefore(tag, acts.firstChild); }
-  tag.className="badge "+(val==="yes"?"yes":"no");
-  tag.textContent = el._kind==="job" ? (val==="yes"?"✓ Apply — queued":"✕ Passed — queued")
-                                     : (val==="yes"?"✓ Accept — queued":"✕ Reject — queued");
-  let undo=acts.querySelector(".undo");
-  if(!undo){ undo=document.createElement("button"); undo.className="undo"; undo.textContent="undo";
-    undo.onclick=function(){ delete STATE[el._key]; save(STATE);
-      el._yes.disabled=false; el._no.disabled=false;
-      if(tag) tag.remove(); undo.remove(); renderOutbox(); };
-    acts.appendChild(undo); }
-}
-
-const root=document.getElementById("root");
-
-if(JOBS.length){
-  section("① New jobs to review");
-  JOBS.forEach(function(j){
-    const skey="job:"+j.n, chosen=STATE[skey];
-    const el=document.createElement("div"); el.className="card";
-    el.innerHTML='<div class="row"><div class="ic">🔎</div><div class="mid">'+
-      '<div class="nm">'+j.company+' <span class="fit">'+j.fit+'% fit</span></div>'+
-      '<div class="ds"><b>'+j.title+'</b> — '+j.ds+'</div>'+
-      (j.cs?'<div class="ds" style="margin-top:6px"><b>About '+j.company+':</b> '+j.cs+'</div>':'')+
-      '<div class="meta">'+(j.loc?j.loc+' &nbsp;·&nbsp; ':'')+'<a class="link" href="'+j.link+'" target="_blank" rel="noopener">Open the listing ↗</a></div>'+
-      '</div></div>';
-    const mid=el.querySelector(".mid"), acts=document.createElement("div"); acts.className="acts";
-    const yes=mk("b-yes","✓ Apply"), no=mk("b-no","✕ Not interested");
-    el._kind="job"; el._key=skey; el._yes=yes; el._no=no; el._acts=acts;
-    yes.onclick=function(){ pick(el,skey,"yes"); };
-    no.onclick =function(){ pick(el,skey,"no"); };
-    acts.appendChild(yes); acts.appendChild(no); mid.appendChild(acts);
-    if(chosen) paintCard(el,chosen);
-    root.appendChild(el);
-  });
-}
-
-if(SUGGESTIONS.length){
-  section("② CV wording upgrades (Polish) — all honest keywords");
-  const allCard=document.createElement("div"); allCard.className="card";
-  allCard.innerHTML='<div class="row"><div class="ic">✍️</div><div class="mid">'+
-    '<div class="nm">'+SUGGESTIONS.length+' upgrades ready</div>'+
-    '<div class="note">Queue them all in one tap, or decide each below.</div></div></div>';
-  const allActs=document.createElement("div"); allActs.className="acts";
-  const allBtn=mk("b-all","✓ Accept all");
-  allBtn.onclick=function(){
-    document.querySelectorAll("[data-sug]").forEach(function(c){ STATE["sug:"+c.getAttribute("data-sug")]="yes"; paintCard(c,"yes"); });
-    save(STATE); renderOutbox(); allBtn.disabled=true; allBtn.textContent="✓ All queued"; };
-  allActs.appendChild(allBtn); allCard.querySelector(".mid").appendChild(allActs); root.appendChild(allCard);
-  SUGGESTIONS.forEach(function(s){
-    const skey="sug:"+s.id, chosen=STATE[skey];
-    const el=document.createElement("div"); el.className="card"; el.setAttribute("data-sug",s.id);
-    el.innerHTML='<div class="row"><div class="ic">·</div><div class="mid">'+
-      '<div class="ds"><b>'+s.pr+'</b> — '+s.t+'</div></div></div>';
-    const mid=el.querySelector(".mid"), acts=document.createElement("div"); acts.className="acts";
-    const yes=mk("b-yes","✓ Accept"), no=mk("b-no","✕ Reject");
-    el._kind="sug"; el._key=skey; el._yes=yes; el._no=no; el._acts=acts;
-    yes.onclick=function(){ pick(el,skey,"yes"); };
-    no.onclick =function(){ pick(el,skey,"no"); };
-    acts.appendChild(yes); acts.appendChild(no); mid.appendChild(acts);
-    if(chosen) paintCard(el,chosen);
-    root.appendChild(el);
-  });
-}
-
-if(ASKS.length){
-  section("③ Other quick asks");
-  ASKS.forEach(function(a){
-    const skey="ask:"+a.key, chosen=STATE[skey];
-    const el=document.createElement("div"); el.className="card";
-    el.innerHTML='<div class="row"><div class="ic">'+a.ic+'</div><div class="mid">'+
-      '<div class="nm">'+a.nm+'</div><div class="ds">'+a.ds+'</div></div></div>';
-    const mid=el.querySelector(".mid"), acts=document.createElement("div"); acts.className="acts";
-    const go=mk("b-go",a.label);
-    function mark(){ go.disabled=true; if(!acts.querySelector(".badge")) acts.insertAdjacentHTML("afterbegin",'<span class="badge go">queued</span>');
-      if(!acts.querySelector(".undo")){ const u=document.createElement("button"); u.className="undo"; u.textContent="undo";
-        u.onclick=function(){ delete STATE[skey]; save(STATE); go.disabled=false; const b=acts.querySelector(".badge"); if(b)b.remove(); u.remove(); renderOutbox(); };
-        acts.appendChild(u); } }
-    go.onclick=function(){ STATE[skey]="go"; save(STATE); mark(); renderOutbox(); };
-    acts.appendChild(go); mid.appendChild(acts);
-    if(chosen) mark();
-    root.appendChild(el);
-  });
-}
-
-if(!JOBS.length && !SUGGESTIONS.length && !ASKS.length){
-  root.innerHTML='<div class="empty"><b>You\\'re all caught up 🎉</b><br>New jobs and upgrades will appear here each morning.</div>';
-}
-
-renderOutbox();
-</script>
-</body>
-</html>`;
-}
+function STUB(msg){ return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Moved into your Dashboard</title>
+<style>:root{color-scheme:light}body{margin:0;background:#f5f6f8;color:#1f2a44;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.5}.wrap{max-width:560px;margin:0 auto;padding:40px 22px}.card{background:#fff;border:1px solid #e6e8ee;border-radius:16px;padding:26px 24px;text-align:center}h1{font-size:20px;margin:0 0 10px}p{font-size:14px;color:#3f4b5b}.big{background:linear-gradient(135deg,#12324f,#1f6f5c);color:#fff;border-radius:14px;padding:16px 18px;margin-top:16px;font-size:14px}.big b{color:#ffd67a}.tip{font-size:12.5px;color:#5b6472;margin-top:16px}</style></head>
+<body><div class="wrap"><div class="card"><h1>\u{1F9ED} Moved into your Dashboard</h1><p>${msg}</p><div class="big">Open <b>Dashboard</b> from the sidebar — it is all on the <b>Today</b> tab now.</div><p class="tip">You can unpin this tile — nothing lives here anymore.</p></div></div></body></html>`; }
