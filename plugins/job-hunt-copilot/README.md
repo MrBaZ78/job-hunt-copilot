@@ -8,7 +8,7 @@ A self-driving job-search assistant for **Claude Cowork**. Run one setup skill a
 - **Coach** — grades each agent daily, tracks the funnel toward a North Star (interviews), verifies the handoffs.
 - **Sync** — keeps your live job-site profiles matched to your Master Profile; helps set up new boards.
 
-Everything the team needs from you lands in **one To-Do list** at the top of the dashboard, with **one plain daily summary** from Coach — so you act from a single place instead of chasing five agents. The dashboard has **4 tabs**: **Today** (the To-Do list — the only tab you must check), **Progress**, **My Profile**, **The Team**. There's also a **Daily Menu**: a little panel with one card per helper and a **▶ Run now** button, so you can start any of them early with a tap. Written in plain, everyday English throughout.
+Everything the team needs from you lands in **one To-Do list** at the top of the dashboard, with **one plain daily summary** from Coach — so you act from a single place instead of chasing five agents. The dashboard has **4 tabs**: **Today** (the To-Do list — the only tab you must check), **Progress**, **My Profile**, **The Team**. Three panels pin in your sidebar: a **Daily To-Do** where you tap **✓ Apply / ✕ Not interested** on today's jobs and **✓ Accept / ✕ Reject** on CV upgrades (a tap just sends me the words you'd type — it never submits or logs in); a **Daily Menu** with one card per helper and a **▶ Run now** button to start any of them early; and the **dashboard** itself. A small daily refresh keeps all three current. Written in plain, everyday English throughout.
 
 Fully generic — **any profession, any country.** You always stay in control: it **never submits an application, sends a message, spends money, creates an account, or logs in for you.** Every CV line must be true and defensible.
 
@@ -62,9 +62,8 @@ You don't need to remember commands — plain language works. But these shortcut
 | **go** | Tells Sync to fill and save your job-site profiles (after you're logged in). |
 | **not interested in 2** | Removes role #2 from today's shortlist so it won't come back. |
 | **re-run** | Re-runs today's search if a job site failed earlier. |
-| **update my job hunt** | Upgrades your setup to the latest plugin version without losing data. |
 
-Where to type them: just in the chat with Claude — the same place you set everything up. You can also tap the **▶ Run now** buttons in the Daily Menu instead of typing "run …".
+Where to type them: just in the chat with Claude — the same place you set everything up. You can also tap the buttons in the panels instead of typing: **✓ Apply / ✕ Not interested** and **✓ Accept / ✕ Reject** in the **Daily To-Do**, and **▶ Run now** in the **Daily Menu**.
 
 ## Privacy & safety
 Everything lives in your own workspace folder. Keep passwords out of it. The agents are read-only on your inbox, never create accounts or log in, and never apply, send, or spend without you.
