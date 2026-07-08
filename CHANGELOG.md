@@ -9,13 +9,23 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
-## [2.4.1] — 2026-07-08
-Fixes to the Daily To-Do panel.
-### Fixed
-- **Company summary now shows** under each role in "New jobs to review" (the panel was showing only the job summary, dropping the company line).
-- **Panel buttons now lead to real action.** A tap **queues** your choice (with an undo), and a single sticky **📋 Send my picks** bar drops ONE plain instruction into the chat for you to send — then the assistant carries them all out. Previously a tap only marked the choice and couldn't reach the chat, so nothing actually happened. Added a plain "How this works" explainer so it's clear the one send is what makes it happen. (A pinned artifact can't message chat on its own; only the Daily Menu's "run this agent" bridge can, which is why Apply/Accept needed this send step.)
+## [2.5.0] — 2026-07-08
+Merged everything into ONE pinned tile: the Dashboard.
+### Changed
+- **One place, not three.** The Daily Menu and the Daily To-Do panel are folded into the **Dashboard's Today tab** as a **Daily Hub**: a ▶ Run-now menu (one button per agent, via `window.cowork.runScheduledTask`) on top, then the actionable jobs (Apply/Not-interested), CV upgrades (Accept/Reject + Accept all) and asks. A fresh install now pins a single tile — the Dashboard — instead of three.
+- **Run-now reads `data-agents.js`.** Each agent entry carries `ic`/`md`/`mt`/`task` (its scheduled-task id, written in setup STEP 5); the build reads those for the menu — no hardcoded task ids. Setup STEP 5b (was 5b+5c) builds the dashboard-with-hub and schedules the daily refresh; `daily-menu.template.html` is no longer used.
+- **Honest action bridge.** A pinned artifact can't message the chat or auto-copy, so the Hub's taps collect into one plain instruction line the user copies and pastes to the coordinator (e.g. "apply to 2; accept CV upgrades 7, 8"). Applied shortlist roles are hidden so they aren't re-offered.
+### Updater
+- `job-hunt-update` migrates existing installs: backfills task ids into `data-agents.js`, rebuilds the merged dashboard, and turns any old `daily-todo`/`daily-menu` pinned tiles into "moved into the Dashboard" pointers (there is no delete-artifact tool).
 ### Notes
-- PATCH — pinned Daily To-Do panel behaviour only; no new features, no data touched. Update with **"update my job hunt"** (or just reopen the panel after a refresh).
+- MINOR (backward-compatible; no data touched). Update: refresh the marketplace, `/reload-plugins`, then run **"update my job hunt"**. Reopen the Dashboard tile afterward — the desktop app caches the rendered view.
+
+## [2.4.1] — 2026-07-08
+### Fixed
+- **Company summary now shows** under each role in the Daily To-Do's "New jobs to review" (it had been showing only the job summary).
+- **Panel buttons lead to real action.** A tap queues your choice (with undo); a sticky bar shows one instruction line to copy and paste into the chat, which the assistant then carries out. Previously a tap only marked the choice and couldn't reach the chat, so nothing happened — a pinned artifact can't message the chat or run scripted clipboard, so it surfaces a selectable line instead.
+### Notes
+- PATCH — pinned-panel behaviour only; no data touched.
 
 ## [2.4.0] — 2026-07-08
 Adds a tap-to-act companion to the Daily Menu, and pins the dashboard.
