@@ -9,6 +9,16 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [2.4.0] — 2026-07-08
+Adds a tap-to-act companion to the Daily Menu, and pins the dashboard.
+### Added
+- **Daily To-Do panel** (`daily-todo` artifact, built by the new `templates/build-dashboards.js` in setup STEP 5c) — the action companion to the Daily Menu. Today's shortlisted jobs show **✓ Apply / ✕ Not interested**; pending CV wording upgrades show **✓ Accept / ✕ Reject** plus **Accept all**; other open asks (unanswered questions, job-sites behind, admin to-dos) are one-tap cards. A tap just sends the same words the user would type (`apply to 2`, `reject 7`, `accept all`) via `sendPrompt` (falling back to copy-to-clipboard); choices persist per-day in `localStorage`. It never submits or logs in.
+- **Pinned dashboard** — the dashboard is now also registered as a self-contained Cowork artifact (`dashboard`, all ten `data-*.js` queues inlined by the same build script), so Daily To-Do, Daily Menu and the dashboard all sit together in the sidebar.
+- **Daily refresh task** (`refresh-pinned-dashboards`) — a small background maintenance task that rebuilds both pinned artifacts from the live queues each day after the agents run, so the snapshots stay current. Silent, `notifyOnCompletion:false`; not an "agent" (not on the Daily Menu). Includes a synced-folder truncation-recovery path (re-run the build with `--src <clean dir>`).
+- **Updater support** — `job-hunt-update` now brings existing installs up to v2.4.0: copies the build script, registers the two new artifacts, and creates the refresh task if missing. Preserves all data.
+### Notes
+- Backward-compatible — MINOR release. To update: refresh the marketplace, `/reload-plugins` (or the Cowork Plugins UI), then run **"update my job hunt"**.
+
 ## [2.3.0] — 2026-07-08
 Makes upgrades painless for people who already set up on an older version.
 ### Added
