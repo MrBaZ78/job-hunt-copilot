@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Your Job-Search Team — Daily Menu</title>
+<!--
+  Daily Menu template. Setup fills the {{PLACEHOLDERS}} then registers this as a Cowork
+  artifact (create_artifact) so the buttons can call window.cowork.runScheduledTask.
+    {{TASK_SCOUT}}  {{TASK_POLISH}}  {{TASK_RADAR}}  {{TASK_COACH}}  {{TASK_SYNC}}
+      = the exact taskId returned when each scheduled task was created.
+    {{WHEN_SCOUT}} … = plain schedule text, e.g. "every day, 9:00 AM" / "Saturdays, 11:30 AM".
+-->
+<style>
+  :root{ color-scheme: light;
+    --navy:#1f2a44; --grey:#5b6472; --line:#e6e8ee; --bg:#f5f6f8; --card:#ffffff;
+    --green:#1f9d55; --blue:#2b6cb0; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--navy);line-height:1.45;
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:22px 18px 40px}
+  h1{font-size:21px;margin:0 0 3px}
+  .sub{color:var(--grey);font-size:13.5px;margin:0 0 18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;margin-bottom:11px;display:flex;gap:14px;align-items:flex-start}
+  .ic{font-size:24px;line-height:1;flex:none;width:30px;text-align:center}
+  .mid{flex:1;min-width:0}
+  .nm{font-weight:800;font-size:15px}
+  .ds{font-size:13.5px;margin-top:2px}
+  .tm{font-size:12px;color:var(--grey);margin-top:5px}
+  .btn{flex:none;border:none;cursor:pointer;font:inherit;font-weight:700;font-size:13px;
+    background:var(--blue);color:#fff;border-radius:9px;padding:9px 14px;white-space:nowrap;
+    transition:background .15s,opacity .15s}
+  .btn:hover{background:#255e9a}
+  .btn:disabled{opacity:.6;cursor:default}
+  .btn.done{background:var(--green)}
+  .btn.err{background:#c0392b}
+  .chief{background:linear-gradient(135deg,#12324f,#1f6f5c);color:#fff;border-radius:14px;
+    padding:15px 17px;margin-top:16px}
+  .chief b{color:#ffd67a}
+  .hint{font-size:12.5px;color:var(--grey);margin-top:14px;text-align:center}
+  .msg{font-size:12px;margin-top:6px;min-height:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Your Job-Search Team</h1>
+  <p class="sub" id="sub">Tap <b>▶ Run now</b> to start any agent — or just type its name to me in chat.</p>
+
+  <div id="cards"></div>
+
+  <div class="chief">
+    🧭 <b>Chief of Staff</b> (that's me) — I keep the whole team running.<br>
+    Type <b>"what's new?"</b> to see your To-Do list, or just tell me what you'd like to do.
+  </div>
+
+  <p class="hint">These run on their own each day too. This menu just lets you start one early.</p>
+</div>
+
+<script>
+  const AGENTS = [
+    { ic:"🔎", nm:"Scout", ds:"Finds new jobs that fit you and lines them up to review.", tm:"Runs on its own · {{WHEN_SCOUT}}", task:"{{TASK_SCOUT}}" },
+    { ic:"✍️", nm:"Polish", ds:"Suggests honest wording upgrades for your CV — you accept or reject.", tm:"Runs on its own · {{WHEN_POLISH}}", task:"{{TASK_POLISH}}" },
+    { ic:"📥", nm:"Radar", ds:"Checks your email & LinkedIn for replies, interviews and offers.", tm:"Runs on its own · {{WHEN_RADAR}}", task:"{{TASK_RADAR}}" },
+    { ic:"🩺", nm:"Coach", ds:"Checks the team, tidies your To-Do, and sends your one daily summary.", tm:"Runs on its own · {{WHEN_COACH}}", task:"{{TASK_COACH}}" },
+    { ic:"🔗", nm:"Sync", ds:"Keeps your job-site profiles matching your latest CV (when you're logged in).", tm:"Runs on its own · {{WHEN_SYNC}}", task:"{{TASK_SYNC}}" }
+  ];
+
+  document.getElementById("sub").insertAdjacentHTML("beforeend",
+    ' &nbsp;·&nbsp; ' + new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}));
+
+  const box = document.getElementById("cards");
+  AGENTS.forEach(a=>{
+    const el = document.createElement("div");
+    el.className = "card";
+    el.innerHTML =
+      '<div class="ic">'+a.ic+'</div>'+
+      '<div class="mid"><div class="nm">'+a.nm+'</div><div class="ds">'+a.ds+'</div>'+
+      '<div class="tm">'+a.tm+'</div><div class="msg"></div></div>';
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = "▶ Run now";
+    btn.onclick = ()=>run(a, btn, el.querySelector(".msg"));
+    el.appendChild(btn);
+    box.appendChild(el);
+  });
+
+  async function run(a, btn, msg){
+    btn.disabled = true;
+    const old = btn.textContent;
+    btn.textContent = "Starting…";
+    msg.textContent = "";
+    try{
+      if(!(window.cowork && typeof window.cowork.runScheduledTask === "function"))
+        throw new Error("no-bridge");
+      await window.cowork.runScheduledTask(a.task);
+      btn.textContent = "✓ Started";
+      btn.classList.add("done");
+      msg.style.color = "var(--green)";
+      msg.textContent = a.nm+" is running — I'll message you when it's done.";
+    }catch(e){
+      btn.textContent = old;
+      btn.classList.add("err");
+      btn.disabled = false;
+      msg.style.color = "#c0392b";
+      msg.textContent = 'Couldn’t start it from here — just type "run '+a.nm+'" to me in chat.';
+    }
+  }
+</script>
+</body>
+</html>
