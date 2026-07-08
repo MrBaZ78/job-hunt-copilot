@@ -17,9 +17,10 @@ Fully generic — **any profession, any country.** You always stay in control: i
 ## Requirements to run
 1. **Claude plan with Cowork access** (Cowork is a research preview — this is the main gate).
 2. **Claude desktop app**, kept open — scheduled agents only run while the app is running.
-3. **Claude in Chrome** extension, connected and **signed into your job boards + email** (Scout/Radar/Sync drive a logged-in browser).
-4. A **folder on your computer** connected as the workspace (everything is written there).
-5. Optional: set the Scout agent to a stronger model (e.g. a top-tier model) for sharper fit-scoring.
+3. **Your email connected** (recommended) — connect Gmail or Outlook as a connector (Settings → Connectors) so Radar can read your inbox directly. This is more reliable than the browser. If you can't, Radar falls back to reading your webmail through Claude in Chrome.
+4. **Claude in Chrome** extension, connected and **signed into your job boards + LinkedIn** (Scout/Radar/Sync drive a logged-in browser for these).
+5. A **folder on your computer** connected as the workspace (everything is written there).
+6. Optional: set the Scout agent to a stronger model (e.g. a top-tier model) for sharper fit-scoring.
 
 ## What you'll be asked (once, during setup)
 Your CV (upload), name + contact email, target role(s) & seniority, location(s) + remote?, industries to prefer/avoid, hard knockouts (visa/salary/onsite), which boards you use, CV language(s), and your preferred morning start hour. Takes a few minutes.
@@ -40,6 +41,22 @@ Once a day Coach sends **one short summary**, and everything you need to do sits
 - **"what's new?"** any time — it reads your To-Do list and tells you the current items right then.
 
 You upload the CV and press **Submit / Save** — the agents never do that for you.
+
+## Words you can type (just say them to Claude in chat)
+You don't need to remember commands — plain language works. But these shortcuts are handy:
+
+| Type this | What it does |
+|---|---|
+| **menu** | Opens your **Daily Menu** — every helper with a ▶ Run now button. |
+| **what's new?** | Reads your To-Do list and tells you what's waiting for you right now. |
+| **show shortlist** | Shows today's job matches from Scout. |
+| **run Scout** (or run Polish / Radar / Coach / Sync) | Starts that helper right away instead of waiting for its scheduled time. |
+| **accept all** / **accept 3** / **reject 3** | Applies (or drops) Polish's CV wording suggestions. |
+| **go** | Tells Sync to fill and save your job-site profiles (after you're logged in). |
+| **not interested in 2** | Removes role #2 from today's shortlist so it won't come back. |
+| **re-run** | Re-runs today's search if a job site failed earlier. |
+
+Where to type them: just in the chat with Claude — the same place you set everything up. You can also tap the **▶ Run now** buttons in the Daily Menu instead of typing "run …".
 
 ## Privacy & safety
 Everything lives in your own workspace folder. Keep passwords out of it. The agents are read-only on your inbox, never create accounts or log in, and never apply, send, or spend without you.
