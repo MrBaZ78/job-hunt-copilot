@@ -1,6 +1,6 @@
 {
   "name": "job-hunt-copilot",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "A self-driving job-search assistant for Cowork. Run the setup skill once: it interviews you, builds your Master Career Profile from your CV, picks the right job boards for your country, and schedules a 5-agent team (find roles, tailor CVs, benchmark your profile, watch your inbox, keep your job-site profiles in sync) feeding a live tabbed dashboard. Everything you need to do lands in ONE To-Do list with one plain daily summary. Three panels pin in your sidebar: a Daily To-Do where you tap Apply/Not-interested on jobs and Accept/Reject on CV upgrades, a Daily Menu to run any helper early, and the dashboard — all kept current by a daily refresh. Fully generic — any profession, any country. You always stay in control: it never submits, sends, spends, or logs in for you.",
   "author": { "name": "Built with Claude Cowork" },
   "keywords": ["job search", "career", "cv", "resume", "recruiting", "agents", "dashboard"]
