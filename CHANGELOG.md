@@ -9,6 +9,14 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [2.4.1] — 2026-07-08
+Fixes to the Daily To-Do panel.
+### Fixed
+- **Company summary now shows** under each role in "New jobs to review" (the panel was showing only the job summary, dropping the company line).
+- **Panel buttons now lead to real action.** A tap **queues** your choice (with an undo), and a single sticky **📋 Send my picks** bar drops ONE plain instruction into the chat for you to send — then the assistant carries them all out. Previously a tap only marked the choice and couldn't reach the chat, so nothing actually happened. Added a plain "How this works" explainer so it's clear the one send is what makes it happen. (A pinned artifact can't message chat on its own; only the Daily Menu's "run this agent" bridge can, which is why Apply/Accept needed this send step.)
+### Notes
+- PATCH — pinned Daily To-Do panel behaviour only; no new features, no data touched. Update with **"update my job hunt"** (or just reopen the panel after a refresh).
+
 ## [2.4.0] — 2026-07-08
 Adds a tap-to-act companion to the Daily Menu, and pins the dashboard.
 ### Added
