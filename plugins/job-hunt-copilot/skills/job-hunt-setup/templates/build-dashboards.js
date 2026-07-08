@@ -61,7 +61,7 @@ const DATE = SH.date || SG.updated || new Date().toISOString().slice(0, 10);
 
 const JOBS = (SH.roles || []).map(r => ({
   n: r.n, company: r.company, title: r.title, fit: r.fit,
-  loc: r.location || "", ds: r.jobSummary || "", link: r.link || "#"
+  loc: r.location || "", ds: r.jobSummary || "", cs: r.companySummary || "", link: r.link || "#"
 }));
 
 const pend = (SG.items || []).filter(i => (i.status || "pending") === "pending");
@@ -104,13 +104,16 @@ return `<!DOCTYPE html>
 <style>
   :root{ color-scheme: light;
     --navy:#1f2a44; --grey:#5b6472; --line:#e6e8ee; --bg:#f5f6f8; --card:#ffffff;
-    --green:#1f9d55; --blue:#2b6cb0; --red:#c0392b; --chip:#eef1f6; }
+    --green:#1f9d55; --blue:#2b6cb0; --red:#c0392b; --chip:#eef1f6; --amber:#b7791f; }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--navy);line-height:1.45;
     font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  .wrap{max-width:780px;margin:0 auto;padding:22px 18px 44px}
+  .wrap{max-width:780px;margin:0 auto;padding:22px 18px 110px}
   h1{font-size:21px;margin:0 0 3px}
-  .sub{color:var(--grey);font-size:13.5px;margin:0 0 20px}
+  .sub{color:var(--grey);font-size:13.5px;margin:0 0 14px}
+  .how{background:#eef4fb;border:1px solid #d3e2f4;border-radius:12px;padding:11px 14px;
+    font-size:13px;color:var(--navy);margin:0 0 18px}
+  .how b{color:var(--blue)}
   h2{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey);
     margin:22px 0 9px;font-weight:800}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
@@ -125,7 +128,7 @@ return `<!DOCTYPE html>
     color:var(--navy);border-radius:20px;padding:2px 9px;margin-left:6px}
   .link{color:var(--blue);text-decoration:none;font-size:12.5px;font-weight:700}
   .link:hover{text-decoration:underline}
-  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;align-items:center}
   .btn{border:none;cursor:pointer;font:inherit;font-weight:700;font-size:13px;
     border-radius:9px;padding:8px 14px;white-space:nowrap;transition:opacity .15s,background .15s}
   .btn:disabled{opacity:.55;cursor:default}
@@ -133,35 +136,44 @@ return `<!DOCTYPE html>
   .b-no{background:#fff;color:var(--red);border:1.5px solid var(--red)}
   .b-go{background:var(--blue);color:#fff}
   .b-all{background:var(--navy);color:#fff}
-  .badge{display:inline-block;font-weight:800;font-size:12px;border-radius:8px;
-    padding:6px 12px;margin-top:11px}
+  .badge{display:inline-block;font-weight:800;font-size:12px;border-radius:8px;padding:6px 10px}
   .badge.yes{background:#e6f5ec;color:var(--green)}
   .badge.no{background:#fdecea;color:var(--red)}
   .badge.go{background:#e8f0f9;color:var(--blue)}
+  .undo{background:none;border:none;color:var(--grey);font:inherit;font-size:12px;
+    text-decoration:underline;cursor:pointer;padding:4px}
   .note{font-size:12.5px;color:var(--grey);margin:4px 0 0}
-  .chief{background:linear-gradient(135deg,#12324f,#1f6f5c);color:#fff;border-radius:14px;
-    padding:14px 16px;margin-top:20px;font-size:13.5px}
-  .chief b{color:#ffd67a}
-  .hint{font-size:12.5px;color:var(--grey);margin-top:14px;text-align:center}
-  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--navy);
-    color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:10px;opacity:0;
-    transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
-  .toast.show{opacity:.97}
   .empty{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;font-size:13.5px}
+  .toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--navy);
+    color:#fff;font-size:13px;font-weight:600;padding:11px 16px;border-radius:10px;opacity:0;
+    transition:opacity .2s;pointer-events:none;max-width:92%;text-align:center;z-index:60}
+  .toast.show{opacity:.98}
+  .outbox{position:fixed;left:0;right:0;bottom:0;background:#12324f;color:#fff;display:none;
+    align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;
+    box-shadow:0 -2px 14px rgba(0,0,0,.22);z-index:50}
+  .outbox.show{display:flex}
+  .outbox .oc{font-weight:800;font-size:14px}
+  .outbox .os{font-size:11.5px;color:#cfe0f5;margin-top:1px}
+  .outbox .sendbtn{background:#ffd67a;color:#12324f;border:none;border-radius:10px;
+    padding:11px 16px;font:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Your Daily To-Do</h1>
-  <p class="sub" id="sub">Tap a button and I'll do the rest in chat — nothing is sent to any job site, I just update your files.</p>
-  <div id="root"></div>
-  <div class="chief">
-    🧭 <b>Chief of Staff</b> (that's me) — every tap here just sends me the same words you'd type.
-    Prefer typing? You still can: "apply to 1", "not interested in 2", "accept all", "reject 36".
+  <p class="sub" id="sub">Pick what you want, then send it to me in one go.</p>
+  <div class="how">
+    <b>How this works:</b> tap your choices below (Apply / Accept / Reject). When you're done, hit
+    <b>📋 Send my picks</b> at the bottom — it drops one message into the chat for you to send, and I do them all.
+    Buttons can't act on their own yet, so that one send is what makes it happen. Nothing is ever submitted or logged in for you.
   </div>
-  <p class="hint">Your choices are remembered here even if you close it. This never applies to a job or logs in for you.</p>
+  <div id="root"></div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="outbox" id="outbox">
+  <div><div class="oc" id="obcount">0 picks ready</div><div class="os">Sends one message to the chat — you press enter.</div></div>
+  <button class="sendbtn" id="obsend">📋 Send my picks</button>
+</div>
 <script>
 ${DATA_BLOCK}
 
@@ -172,91 +184,149 @@ let STATE = load();
 document.getElementById("sub").insertAdjacentHTML("beforeend",
   ' &nbsp;·&nbsp; ' + new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}));
 
-function sendToChat(cmd){
+/* registries so we can turn saved picks into one instruction */
+const JOBMAP={}; JOBS.forEach(j=>{ JOBMAP["job:"+j.n]=j; });
+const ASKMAP={}; ASKS.forEach(a=>{ ASKMAP["ask:"+a.key]=a; });
+
+function toast(html, ms){ const t=document.getElementById("toast"); t.innerHTML=html; t.classList.add("show");
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"), ms||3200); }
+function mk(cls,label){ const b=document.createElement("button"); b.className="btn "+cls; b.textContent=label; return b; }
+function section(t){ const h=document.createElement("h2"); h.textContent=t; const root=document.getElementById("root"); root.appendChild(h); }
+
+/* build ONE plain instruction from every saved pick */
+function buildInstruction(){
+  const applyJ=[],passJ=[],accS=[],rejS=[],askC=[];
+  Object.keys(STATE).forEach(function(k){
+    const v=STATE[k];
+    if(k.indexOf("job:")===0){ (v==="yes"?applyJ:passJ).push(k.slice(4)); }
+    else if(k.indexOf("sug:")===0){ (v==="yes"?accS:rejS).push(k.slice(4)); }
+    else if(k.indexOf("ask:")===0 && v==="go"){ const a=ASKMAP[k]; if(a && a.cmd) askC.push(a.cmd); }
+  });
+  const parts=[];
+  if(applyJ.length) parts.push("apply to job"+(applyJ.length>1?"s":"")+" "+applyJ.join(", "));
+  if(passJ.length)  parts.push("not interested in job"+(passJ.length>1?"s":"")+" "+passJ.join(", "));
+  if(accS.length)   parts.push("accept CV upgrade"+(accS.length>1?"s":"")+" "+accS.join(", "));
+  if(rejS.length)   parts.push("reject CV upgrade"+(rejS.length>1?"s":"")+" "+rejS.join(", "));
+  askC.forEach(function(c){ parts.push(c); });
+  const count=applyJ.length+passJ.length+accS.length+rejS.length+askC.length;
+  return { count: count, text: parts.length ? ("From my Daily To-Do, please: "+parts.join("; ")+".") : "" };
+}
+function renderOutbox(){
+  const bar=document.getElementById("outbox"); const r=buildInstruction();
+  if(!r.count){ bar.classList.remove("show"); return; }
+  bar.classList.add("show");
+  document.getElementById("obcount").textContent = r.count+" pick"+(r.count>1?"s":"")+" ready to send";
+}
+function trySend(text){
   const fns=[window.sendPrompt, window.cowork&&window.cowork.sendPrompt,
              window.parent&&window.parent.sendPrompt, window.top&&window.top.sendPrompt];
-  for(const fn of fns){ if(typeof fn==="function"){ try{ fn(cmd); return "sent"; }catch(e){} } }
-  try{ navigator.clipboard&&navigator.clipboard.writeText(cmd); }catch(e){}
-  return "copied";
+  for(var i=0;i<fns.length;i++){ if(typeof fns[i]==="function"){ try{ fns[i](text); return true; }catch(e){} } }
+  return false;
 }
-function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show");
-  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600); }
-function act(cmd,msg){ const how=sendToChat(cmd);
-  toast(how==="sent" ? msg+" — done, check chat." : msg+' — copied. Paste to me in chat: "'+cmd+'"'); }
+function sendAll(){
+  const r=buildInstruction(); if(!r.count) return;
+  const sent=trySend(r.text);
+  try{ if(navigator.clipboard) navigator.clipboard.writeText(r.text); }catch(e){}
+  if(sent) toast("Sent "+r.count+" to chat ✓ — I'm on it.", 4000);
+  else toast("📋 Copied. Now click the chat box, press <b>Ctrl/Cmd&nbsp;+&nbsp;V</b> and hit enter — I'll do all "+r.count+".", 7000);
+}
+document.getElementById("obsend").onclick = sendAll;
+
+function pick(el, key, val){
+  STATE[key]=val; save(STATE); paintCard(el, val); renderOutbox();
+}
+function paintCard(el, val){
+  const acts=el._acts; el._yes.disabled=true; el._no.disabled=true;
+  let tag=acts.querySelector(".badge");
+  if(!tag){ tag=document.createElement("span"); acts.insertBefore(tag, acts.firstChild); }
+  tag.className="badge "+(val==="yes"?"yes":"no");
+  tag.textContent = el._kind==="job" ? (val==="yes"?"✓ Apply — queued":"✕ Passed — queued")
+                                     : (val==="yes"?"✓ Accept — queued":"✕ Reject — queued");
+  let undo=acts.querySelector(".undo");
+  if(!undo){ undo=document.createElement("button"); undo.className="undo"; undo.textContent="undo";
+    undo.onclick=function(){ delete STATE[el._key]; save(STATE);
+      el._yes.disabled=false; el._no.disabled=false;
+      if(tag) tag.remove(); undo.remove(); renderOutbox(); };
+    acts.appendChild(undo); }
+}
 
 const root=document.getElementById("root");
-function section(t){ const h=document.createElement("h2"); h.textContent=t; root.appendChild(h); }
-function mk(cls,label){ const b=document.createElement("button"); b.className="btn "+cls; b.textContent=label; return b; }
-function paint(val,yes,no,acts){ yes.disabled=true; no.disabled=true;
-  let b=acts.querySelector(".badge"); if(!b){ b=document.createElement("span"); acts.appendChild(b); }
-  if(val==="yes"){ b.className="badge yes"; b.textContent="✓ You chose to accept / apply"; }
-  else{ b.className="badge no"; b.textContent="✕ Passed"; } }
-function choose(key,val,yes,no,acts,cmd,msg){ STATE[key]=val; save(STATE); act(cmd,msg); paint(val,yes,no,acts); }
 
 if(JOBS.length){
   section("① New jobs to review");
-  JOBS.forEach(j=>{
+  JOBS.forEach(function(j){
     const skey="job:"+j.n, chosen=STATE[skey];
     const el=document.createElement("div"); el.className="card";
     el.innerHTML='<div class="row"><div class="ic">🔎</div><div class="mid">'+
       '<div class="nm">'+j.company+' <span class="fit">'+j.fit+'% fit</span></div>'+
       '<div class="ds"><b>'+j.title+'</b> — '+j.ds+'</div>'+
+      (j.cs?'<div class="ds" style="margin-top:6px"><b>About '+j.company+':</b> '+j.cs+'</div>':'')+
       '<div class="meta">'+(j.loc?j.loc+' &nbsp;·&nbsp; ':'')+'<a class="link" href="'+j.link+'" target="_blank" rel="noopener">Open the listing ↗</a></div>'+
       '</div></div>';
     const mid=el.querySelector(".mid"), acts=document.createElement("div"); acts.className="acts";
     const yes=mk("b-yes","✓ Apply"), no=mk("b-no","✕ Not interested");
-    yes.onclick=()=>choose(skey,"yes",yes,no,acts,"apply to "+j.n,"Marked to apply to "+j.company);
-    no.onclick =()=>choose(skey,"no", yes,no,acts,"not interested in "+j.n,"Passed on "+j.company);
+    el._kind="job"; el._key=skey; el._yes=yes; el._no=no; el._acts=acts;
+    yes.onclick=function(){ pick(el,skey,"yes"); };
+    no.onclick =function(){ pick(el,skey,"no"); };
     acts.appendChild(yes); acts.appendChild(no); mid.appendChild(acts);
-    if(chosen) paint(chosen,yes,no,acts); root.appendChild(el);
+    if(chosen) paintCard(el,chosen);
+    root.appendChild(el);
   });
 }
+
 if(SUGGESTIONS.length){
   section("② CV wording upgrades (Polish) — all honest keywords");
   const allCard=document.createElement("div"); allCard.className="card";
   allCard.innerHTML='<div class="row"><div class="ic">✍️</div><div class="mid">'+
     '<div class="nm">'+SUGGESTIONS.length+' upgrades ready</div>'+
-    '<div class="note">Accept the lot in one tap, or decide each below.</div></div></div>';
+    '<div class="note">Queue them all in one tap, or decide each below.</div></div></div>';
   const allActs=document.createElement("div"); allActs.className="acts";
   const allBtn=mk("b-all","✓ Accept all");
-  allBtn.onclick=()=>{ act("accept all","Accepting all wording upgrades");
-    SUGGESTIONS.forEach(s=>{ STATE["sug:"+s.id]="yes"; }); save(STATE);
-    document.querySelectorAll("[data-sug]").forEach(c=>paint("yes",c._yes,c._no,c._acts));
-    allBtn.disabled=true; allBtn.textContent="✓ All accepted"; };
+  allBtn.onclick=function(){
+    document.querySelectorAll("[data-sug]").forEach(function(c){ STATE["sug:"+c.getAttribute("data-sug")]="yes"; paintCard(c,"yes"); });
+    save(STATE); renderOutbox(); allBtn.disabled=true; allBtn.textContent="✓ All queued"; };
   allActs.appendChild(allBtn); allCard.querySelector(".mid").appendChild(allActs); root.appendChild(allCard);
-  SUGGESTIONS.forEach(s=>{
+  SUGGESTIONS.forEach(function(s){
     const skey="sug:"+s.id, chosen=STATE[skey];
     const el=document.createElement("div"); el.className="card"; el.setAttribute("data-sug",s.id);
     el.innerHTML='<div class="row"><div class="ic">·</div><div class="mid">'+
       '<div class="ds"><b>'+s.pr+'</b> — '+s.t+'</div></div></div>';
     const mid=el.querySelector(".mid"), acts=document.createElement("div"); acts.className="acts";
     const yes=mk("b-yes","✓ Accept"), no=mk("b-no","✕ Reject");
-    yes.onclick=()=>choose(skey,"yes",yes,no,acts,"accept "+s.id,"Accepted");
-    no.onclick =()=>choose(skey,"no", yes,no,acts,"reject "+s.id,"Rejected");
+    el._kind="sug"; el._key=skey; el._yes=yes; el._no=no; el._acts=acts;
+    yes.onclick=function(){ pick(el,skey,"yes"); };
+    no.onclick =function(){ pick(el,skey,"no"); };
     acts.appendChild(yes); acts.appendChild(no); mid.appendChild(acts);
-    el._yes=yes; el._no=no; el._acts=acts;
-    if(chosen) paint(chosen,yes,no,acts); root.appendChild(el);
+    if(chosen) paintCard(el,chosen);
+    root.appendChild(el);
   });
 }
+
 if(ASKS.length){
   section("③ Other quick asks");
-  ASKS.forEach(a=>{
+  ASKS.forEach(function(a){
     const skey="ask:"+a.key, chosen=STATE[skey];
     const el=document.createElement("div"); el.className="card";
     el.innerHTML='<div class="row"><div class="ic">'+a.ic+'</div><div class="mid">'+
       '<div class="nm">'+a.nm+'</div><div class="ds">'+a.ds+'</div></div></div>';
     const mid=el.querySelector(".mid"), acts=document.createElement("div"); acts.className="acts";
     const go=mk("b-go",a.label);
-    go.onclick=()=>{ STATE[skey]="go"; save(STATE); act(a.cmd,a.label);
-      go.disabled=true; acts.querySelector(".badge")||acts.insertAdjacentHTML("beforeend",'<span class="badge go">Sent ✓</span>'); };
+    function mark(){ go.disabled=true; if(!acts.querySelector(".badge")) acts.insertAdjacentHTML("afterbegin",'<span class="badge go">queued</span>');
+      if(!acts.querySelector(".undo")){ const u=document.createElement("button"); u.className="undo"; u.textContent="undo";
+        u.onclick=function(){ delete STATE[skey]; save(STATE); go.disabled=false; const b=acts.querySelector(".badge"); if(b)b.remove(); u.remove(); renderOutbox(); };
+        acts.appendChild(u); } }
+    go.onclick=function(){ STATE[skey]="go"; save(STATE); mark(); renderOutbox(); };
     acts.appendChild(go); mid.appendChild(acts);
-    if(chosen){ go.disabled=true; acts.insertAdjacentHTML("beforeend",'<span class="badge go">Sent ✓</span>'); }
+    if(chosen) mark();
     root.appendChild(el);
   });
 }
+
 if(!JOBS.length && !SUGGESTIONS.length && !ASKS.length){
   root.innerHTML='<div class="empty"><b>You\\'re all caught up 🎉</b><br>New jobs and upgrades will appear here each morning.</div>';
 }
+
+renderOutbox();
 </script>
 </body>
 </html>`;
