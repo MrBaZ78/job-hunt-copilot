@@ -17,6 +17,8 @@ Fully generic — any profession, any country. It **never submits an application
 3. In chat, say **"set up my job search"** and answer the short intake. The setup builds everything and **creates the 5 scheduled agents automatically.**
 4. After setup, drive it by just typing to Claude — e.g. **"menu"** (open the Daily Menu), **"what's new?"** (see what's waiting), **"show shortlist"**, **"run Scout"**, **"accept all"**, **"go"**. Full list in the plugin README.
 
+**Already installed an older version?** Refresh the plugin (`/plugin marketplace update job-hunt-copilot-marketplace`, or the Cowork Plugins UI), then say **"update my job hunt"** — it migrates your existing setup to the new version without losing your data. See the plugin README's *Updating* section.
+
 ## What's in here
 - `.claude-plugin/marketplace.json` — marketplace manifest (lists the plugin).
 - `plugins/job-hunt-copilot/` — the plugin: manifest, the `job-hunt-setup` skill, and templates (dashboard + Master Profile).

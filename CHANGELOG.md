@@ -9,6 +9,14 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [2.3.0] — 2026-07-08
+Makes upgrades painless for people who already set up on an older version.
+### Added
+- **`job-hunt-update` skill (in-place migrator)** — say **"update my job hunt"** and it upgrades an existing install without losing data: refreshes the dashboard and rebuilds the Daily Menu, adds any missing data files (e.g. `data-todo.js`), and re-syncs the 5 agent prompts from the saved config (so they get the To-Do list, plain-English writing, Daily-Menu nudges, and email-connector Radar). It preserves the Master Profile, applications, saved suggestions, and "not interested" list. Solves the gap where updating the plugin alone only affected *future* setups, not a running system.
+- **Names the command-center chat** — both setup (STEP 6) and the updater now ask the user to rename their main chat **"Chief of Staff"**, so they always know the one place they talk to.
+### Notes
+- Backward-compatible — MINOR release. To update: refresh the marketplace (`/plugin marketplace update job-hunt-copilot-marketplace` in Claude Code, or the Plugins UI in Cowork), then run **"update my job hunt"**.
+
 ## [2.2.0] — 2026-07-08
 Three requested tweaks for real installs.
 ### Added
