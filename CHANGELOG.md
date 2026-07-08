@@ -9,6 +9,15 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [2.1.0] — 2026-07-08
+Fixes the "I finished setup — now what?" confusion new users hit.
+### Added
+- **Daily Menu** — a live control-panel artifact (`Agent-System/daily-menu.html`, registered via `create_artifact`) with one card per agent (plain "what it does for you" line) and a **▶ Run now** button that starts that agent early via `window.cowork.runScheduledTask(<taskId>)`. Buttons degrade gracefully to "type 'run Scout'" if they can't trigger. New template: `templates/daily-menu.template.html`; new setup step **STEP 5b** builds it from the real task IDs.
+### Changed
+- **Much clearer end of setup (STEP 6)** — the coordinator now opens the Daily Menu for the user and walks the daily rhythm in a few plain lines with real example replies, instead of a wall of text.
+- **Coach's daily message points to the menu** — opens by inviting the user to run any helper early from the Daily Menu, and closes with the "what's new?" / Run-now reminder.
+- Backward-compatible with 2.0.0 (adds a menu + wording; no existing behaviour removed), so this is a MINOR release.
+
 ## [2.0.0] — 2026-07-07
 Big usability overhaul. Two problems from real use: the writing was too complex, and five agents each pinging separately felt scattered — the user couldn't tell what to do or when, and worried they'd missed something.
 ### Added
