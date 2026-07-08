@@ -8,7 +8,7 @@ A self-driving job-search assistant for **Claude Cowork**. Run one setup skill a
 - **Coach** — grades each agent daily, tracks the funnel toward a North Star (interviews), verifies the handoffs.
 - **Sync** — keeps your live job-site profiles matched to your Master Profile; helps set up new boards.
 
-Everything the team needs from you lands in **one To-Do list** at the top of the dashboard, with **one plain daily summary** from Coach — so you act from a single place instead of chasing five agents. The dashboard has **4 tabs**: **Today** (the To-Do list — the only tab you must check), **Progress**, **My Profile**, **The Team**. Written in plain, everyday English throughout.
+Everything the team needs from you lands in **one To-Do list** at the top of the dashboard, with **one plain daily summary** from Coach — so you act from a single place instead of chasing five agents. The dashboard has **4 tabs**: **Today** (the To-Do list — the only tab you must check), **Progress**, **My Profile**, **The Team**. There's also a **Daily Menu**: a little panel with one card per helper and a **▶ Run now** button, so you can start any of them early with a tap. Written in plain, everyday English throughout.
 
 Fully generic — **any profession, any country.** You always stay in control: it **never submits an application, sends a message, spends money, creates an account, or logs in for you.** Every CV line must be true and defensible.
 
@@ -33,7 +33,7 @@ Your CV (upload), name + contact email, target role(s) & seniority, location(s) 
 6. Open `Agent-System/progress-dashboard.html` to watch progress.
 
 ## Daily use
-Once a day Coach sends **one short summary**, and everything you need to do sits in the **To-Do list** on the dashboard's **Today** tab. You act by simply replying in chat:
+Once a day Coach sends **one short summary**, and everything you need to do sits in the **To-Do list** on the dashboard's **Today** tab. Open the **Daily Menu** any time to start a helper early — tap **▶ Run now** on its card (or just type e.g. "run Scout"). You act by simply replying in chat:
 - **"show shortlist"** to see today's roles, then the **numbers you want** (or **"not interested in N"**).
 - **"accept all"** / **"accept #"** / **"reject #"** for Polish's profile suggestions.
 - **"go"** to let Sync fill and save a job-site profile once you're logged in.
