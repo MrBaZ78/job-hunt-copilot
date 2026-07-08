@@ -7,7 +7,7 @@ Everything the team needs from you lands in **one To-Do list** with **one plain 
 Fully generic — any profession, any country. It **never submits an application, sends a message, spends money, creates an account, or logs in for you.**
 
 ## Install (for your friend)
-1. Requirements: a Claude plan with **Cowork access**, the **desktop app** open, **Claude in Chrome** signed into their job boards + email, and a **workspace folder**.
+1. Requirements: a Claude plan with **Cowork access**, the **desktop app** open, **their email connected** (Gmail/Outlook connector — recommended, so Radar reads the inbox directly) or **Claude in Chrome** signed into their webmail as a fallback, **Claude in Chrome** signed into their job boards + LinkedIn, and a **workspace folder**.
 2. Add this repo as a plugin marketplace, then install the plugin. In Claude Code / Cowork:
    ```
    /plugin marketplace add MrBaZ78/job-hunt-copilot
@@ -15,6 +15,7 @@ Fully generic — any profession, any country. It **never submits an application
    ```
    (Exact commands can vary by Cowork version. If plugin install isn't available, the `job-hunt-setup.skill` file installs the same setup via the "Save skill" button.)
 3. In chat, say **"set up my job search"** and answer the short intake. The setup builds everything and **creates the 5 scheduled agents automatically.**
+4. After setup, drive it by just typing to Claude — e.g. **"menu"** (open the Daily Menu), **"what's new?"** (see what's waiting), **"show shortlist"**, **"run Scout"**, **"accept all"**, **"go"**. Full list in the plugin README.
 
 ## What's in here
 - `.claude-plugin/marketplace.json` — marketplace manifest (lists the plugin).

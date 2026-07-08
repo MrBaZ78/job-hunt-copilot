@@ -9,6 +9,15 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [2.2.0] — 2026-07-08
+Three requested tweaks for real installs.
+### Added
+- **Multi-select intake** — setup now uses `multiSelect: true` for questions where more than one answer is true (seniority levels, target roles, locations/cities, industries to prefer/avoid, job boards, CV languages), so users can pick several instead of one.
+- **Prefer a connected email over the browser** — if a Gmail/Outlook connector is connected, Radar reads the inbox directly through it (read-only) instead of driving Claude in Chrome, which is more reliable. Chrome remains the fallback and is still used for LinkedIn. Setup recommends connecting email and STEP 0 checks for it.
+- **"Words you can type" section in the README** — a table of the handy shortcuts (`menu`, `what's new?`, `show shortlist`, `run Scout`, `accept all` / `accept #` / `reject #`, `go`, `not interested in N`, `re-run`) and where to type them.
+### Notes
+- Backward-compatible (no behaviour removed) — MINOR release.
+
 ## [2.1.0] — 2026-07-08
 Fixes the "I finished setup — now what?" confusion new users hit.
 ### Added
