@@ -33,6 +33,13 @@ Your CV (upload), name + contact email, target role(s) & seniority, location(s) 
 5. Click **Run now** on each new scheduled task once, so it can pre-approve browser access.
 6. Open `Agent-System/progress-dashboard.html` to watch progress.
 
+## Updating to a new version
+Installing a newer plugin version only refreshes the setup skill + templates — it does **not** change a system you've already set up (your agents, dashboard and Daily Menu were written into your workspace at setup time). To upgrade an existing install in two steps:
+1. **Refresh the plugin:** in Claude Code run `/plugin marketplace update job-hunt-copilot-marketplace` then `/reload-plugins`; in Cowork, update it from the Plugins UI. (Third-party marketplaces don't auto-update by default.)
+2. **Migrate your running system:** say **"update my job hunt"**. The `job-hunt-update` skill refreshes your dashboard, rebuilds the Daily Menu, adds anything missing, and re-syncs your 5 helpers to the new behaviour — **without touching your CV, applications, saved suggestions, or history.**
+
+Brand-new users skip this and just run setup.
+
 ## Daily use
 Once a day Coach sends **one short summary**, and everything you need to do sits in the **To-Do list** on the dashboard's **Today** tab. Open the **Daily Menu** any time to start a helper early — tap **▶ Run now** on its card (or just type e.g. "run Scout"). You act by simply replying in chat:
 - **"show shortlist"** to see today's roles, then the **numbers you want** (or **"not interested in N"**).
@@ -55,6 +62,7 @@ You don't need to remember commands — plain language works. But these shortcut
 | **go** | Tells Sync to fill and save your job-site profiles (after you're logged in). |
 | **not interested in 2** | Removes role #2 from today's shortlist so it won't come back. |
 | **re-run** | Re-runs today's search if a job site failed earlier. |
+| **update my job hunt** | Upgrades your setup to the latest plugin version without losing data. |
 
 Where to type them: just in the chat with Claude — the same place you set everything up. You can also tap the **▶ Run now** buttons in the Daily Menu instead of typing "run …".
 
