@@ -125,6 +125,23 @@
 <script src="Queues/data-todo.js"></script>
 <script>
   function esc(s){return (s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+  // Approve / Not-now buttons for a Coach recommendation — routes into the shared Daily Hub copy-line.
+  function paintCoachRec(id){
+    var wrap=document.querySelector('.crec[data-rec="'+id+'"] .cacts'); if(!wrap) return;
+    var key="rec:"+id, st=(window.hubGet?window.hubGet(key):null);
+    wrap.innerHTML="";
+    function undoBtn(){var u=document.createElement("button");u.textContent="undo";u.style.cssText="background:none;border:none;color:#5b6472;font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:4px";u.onclick=function(){if(window.hubDrop)window.hubDrop(key);paintCoachRec(id);};return u;}
+    if(st==="go"||st==="no"){
+      var ok=st==="go",b=document.createElement("span");
+      b.textContent=ok?"✓ Approve — queued":"✕ Not now — queued";
+      b.style.cssText="font-weight:800;font-size:12px;border-radius:8px;padding:5px 9px;"+(ok?"background:#e6f5ec;color:#1f9d55":"background:#fdecea;color:#c0392b");
+      wrap.appendChild(b);wrap.appendChild(undoBtn());
+    } else {
+      var y=document.createElement("button");y.textContent="✓ Approve";y.style.cssText="border:none;cursor:pointer;font:inherit;font-weight:700;font-size:13px;border-radius:9px;padding:7px 13px;background:#1f9d55;color:#fff";y.onclick=function(){if(window.hubQueue)window.hubQueue(key,"go");paintCoachRec(id);};
+      var n=document.createElement("button");n.textContent="✕ Not now";n.style.cssText="cursor:pointer;font:inherit;font-weight:700;font-size:13px;border-radius:9px;padding:6px 12px;background:#fff;color:#c0392b;border:1.5px solid #c0392b";n.onclick=function(){if(window.hubQueue)window.hubQueue(key,"no");paintCoachRec(id);};
+      wrap.appendChild(y);wrap.appendChild(n);
+    }
+  }
   const today = new Date();
 
   // tabs
@@ -266,12 +283,20 @@
   }).join("") || '<p class="muted">No agents set up yet.</p>';
 
   const awaiting=(H.recommendations||[]).filter(r=>(r.status||'awaiting')==='awaiting');
-  document.getElementById("recs").innerHTML = awaiting.length ? `
+  const recsEl=document.getElementById("recs");
+  if(!awaiting.length){ recsEl.innerHTML=''; }
+  else{
+    recsEl.innerHTML = `
     <div class="lead" style="border-left-color:var(--amber);margin-top:14px">
       <b>🔒 ${awaiting.length} change${awaiting.length>1?'s':''} Coach wants your OK</b> — nothing applied yet.
-      ${awaiting.map(r=>`<div style="font-size:13px;margin-top:6px"><b>#${r.id}</b> ${esc(r.title)}${r.detail?`<div class="note" style="margin-top:1px">${esc(r.detail)}</div>`:''}</div>`).join("")}
-      <div class="note" style="margin-top:8px">Reply <b>"accept coach #N"</b> to apply, or <b>"reject coach #N"</b>.</div>
-    </div>` : '';
+      ${awaiting.map(r=>`<div class="crec" data-rec="${r.id}" style="margin-top:8px;padding-top:8px;border-top:1px solid #eef0f4">
+        <div style="font-size:13px"><b>#${r.id}</b> ${esc(r.title)}${r.detail?`<div class="note" style="margin-top:1px">${esc(r.detail)}</div>`:''}</div>
+        <div class="cacts" style="margin-top:7px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"></div>
+      </div>`).join("")}
+      <div class="note" style="margin-top:8px">Tap <b>Approve</b> (it adds a line you paste to me), or reply <b>"accept coach #N"</b> / <b>"reject coach #N"</b>.</div>
+    </div>`;
+    awaiting.forEach(r=>paintCoachRec(r.id));
+  }
 
   const loops=[
     ["🔎 Scout","finds roles → your shortlist","You / 🩺 Coach","you pick; Coach tracks the numbers"],
