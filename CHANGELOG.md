@@ -9,6 +9,16 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [2.6.0] — 2026-07-09
+Two Daily-Hub upgrades ported from the reference system.
+### Added
+- **Approve / Not-now buttons on Coach's recommendations.** On the Dashboard's **The Team** tab, each change Coach is waiting on ("🔒 N changes Coach wants your OK") now has **✓ Approve** and **✕ Not now** buttons (with undo) instead of being a read-only list. A tap queues the choice into the same bottom copy-line the rest of the Hub uses (e.g. "accept Coach's change #5") — the Hub's queue is exposed to the whole page via `window.hubQueue/hubDrop/hubGet`, and the build's copy-line now understands `rec:` keys.
+- **"Last run" times + a Refresh card in "Start a helper early."** Each Run-now card can show when that helper last ran, formatted in the **user's local timezone** (client-side, so it's correct in any country). The build reads a live `AGENT_RUNS_JSON` env var (taskId → ISO-8601 UTC, set by the refresh task from `list_scheduled_tasks`) or an optional `data-agentruns.js` fallback; absent = the card simply omits the line. A **🔄 Refresh** card is appended so the user can rebuild the dashboard on demand (`refresh-pinned-dashboards`).
+### Changed
+- Setup STEP 5b and the updater now have the daily refresh task pass `AGENT_RUNS_JSON` (from `list_scheduled_tasks`) into `node build-dashboards.js`, so the "Last run" times stay current on their own.
+### Notes
+- MINOR (backward-compatible; no data touched). Update: refresh the marketplace, `/reload-plugins`, then run **"update my job hunt"**. Reopen the Dashboard tile afterward (the desktop app caches the rendered view).
+
 ## [2.5.1] — 2026-07-09
 ### Added
 - **Dismissable picks bar.** The sticky "N picks ready — copy the line" bar at the bottom of the Daily Hub now has a **×** button to hide it. It reappears automatically the moment you tap any Apply / Accept / Reject again, so queued picks are never lost — hiding only tucks the bar out of the way.
