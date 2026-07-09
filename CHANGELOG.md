@@ -9,6 +9,12 @@ The single source of truth for the current version is the `version` field in `pl
 
 ---
 
+## [2.5.1] — 2026-07-09
+### Added
+- **Dismissable picks bar.** The sticky "N picks ready — copy the line" bar at the bottom of the Daily Hub now has a **×** button to hide it. It reappears automatically the moment you tap any Apply / Accept / Reject again, so queued picks are never lost — hiding only tucks the bar out of the way.
+### Notes
+- PATCH — pinned-Hub UI only; no data touched. Update: refresh the marketplace, `/reload-plugins`, then run **"update my job hunt"**. Reopen the Dashboard tile afterward (the desktop app caches the rendered view).
+
 ## [2.5.0] — 2026-07-08
 Merged everything into ONE pinned tile: the Dashboard.
 ### Changed
